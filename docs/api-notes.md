@@ -32,5 +32,7 @@ What the implementation relies on, and how well each point is verified. Re-check
 
 - Whether bytime week buckets follow ISO weeks or 7-day chunks from `date1`: weekly series must start on a Monday, where both agree.
 - Whether `=.()` list syntax is valid: lists are compiled to `OR`/`AND` of single conditions.
-- Whether a public client can refresh without a secret: refresh is attempted once; failure means signing in again.
-- Loopback redirect rules (`127.0.0.1`, ports) for Yandex OAuth apps: to be confirmed when registering the DevCrabs app.
+- Whether a public client can refresh without a secret: refresh is attempted once; failure means signing in again. The Yandex ID refresh page (`tokens/refresh-client`, read 2026-11-09) lists only `grant_type` and `refresh_token` as required and `client_id` / `client_secret` as additional parameters; it says nothing about apps without a secret.
+- Loopback redirect rules (`127.0.0.1`, ports, plain `http`) for Yandex OAuth apps: the docs (`register-auth`, `codes/code-url`, read 2026-11-09) only say that several Redirect URIs can be registered and that matching is exact on scheme, host, port and path. To be confirmed when registering the DevCrabs app.
+- The exact name of the Metrika read permission in the app registration form (`metrika:read` is the scope in the Metrika docs).
+- Moderation: the `unauthorized_client` error means the app was rejected by moderation or is still waiting for it (`codes/code-url`). How long moderation takes and whether it applies to this app type is not stated.
