@@ -1,0 +1,468 @@
+{
+  "annotations": {
+    "destructiveHint": true,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": false,
+    "title": "Cancel job"
+  },
+  "description": "Cancels an export job and removes its temporary files. Safe to repeat. Already finished files are not deleted.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "connection_id": {
+        "description": "Connection ID from metrika_status (e.g. conn_demo).",
+        "maxLength": 64,
+        "minLength": 1,
+        "type": "string"
+      },
+      "job_id": {
+        "description": "Job ID from metrika_export_report.",
+        "pattern": "^job_[a-z0-9]{6,40}$",
+        "type": "string"
+      }
+    },
+    "required": [
+      "connection_id",
+      "job_id"
+    ],
+    "type": "object"
+  },
+  "name": "metrika_cancel_job",
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "artifacts": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "artifact_id": {
+              "type": "string"
+            },
+            "expires_at": {
+              "type": "string"
+            },
+            "file_path": {
+              "description": "Local file the user can open; managed copy, deleted at expires_at.",
+              "type": "string"
+            },
+            "media_type": {
+              "type": "string"
+            },
+            "rows": {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer"
+            },
+            "sha256": {
+              "type": "string"
+            },
+            "size_bytes": {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer"
+            },
+            "uri": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "artifact_id",
+            "uri",
+            "file_path",
+            "media_type",
+            "size_bytes",
+            "sha256",
+            "rows",
+            "expires_at"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "connection_id": {
+        "type": "string"
+      },
+      "created_at": {
+        "type": "string"
+      },
+      "error": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "enum": [
+                  "AUTH_REQUIRED",
+                  "AUTH_EXPIRED",
+                  "AUTH_NOT_CONFIGURED",
+                  "ACCESS_DENIED",
+                  "COUNTER_NOT_ALLOWED",
+                  "INVALID_QUERY",
+                  "UNSUPPORTED_COMBINATION",
+                  "QUALITY_REQUIREMENT_NOT_MET",
+                  "TIMEZONE_UNKNOWN",
+                  "QUOTA_EXCEEDED",
+                  "UPSTREAM_UNAVAILABLE",
+                  "UPSTREAM_TIMEOUT",
+                  "UPSTREAM_SCHEMA_CHANGED",
+                  "RESULT_LIMIT_REACHED",
+                  "CURSOR_EXPIRED",
+                  "CURSOR_MISMATCH",
+                  "JOB_NOT_FOUND",
+                  "ARTIFACT_NOT_FOUND",
+                  "ARTIFACT_EXPIRED",
+                  "STORAGE_LIMIT",
+                  "IDEMPOTENCY_CONFLICT",
+                  "INTERNAL_ERROR"
+                ],
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "retry_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "retryable",
+              "retry_at"
+            ],
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "finished_at": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "format": {
+        "enum": [
+          "csv",
+          "csv_excel_safe",
+          "json"
+        ],
+        "type": "string"
+      },
+      "job_id": {
+        "type": "string"
+      },
+      "kind": {
+        "const": "job",
+        "type": "string"
+      },
+      "next_action": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "progress": {
+        "additionalProperties": false,
+        "properties": {
+          "bytes_written": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          },
+          "parts": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          },
+          "percent": {
+            "description": "Only when the API reports an exact row count.",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "rows_received": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          },
+          "rows_total": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": -9007199254740991,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rows_total_rounded": {
+            "type": "boolean"
+          },
+          "rows_written": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rows_received",
+          "rows_written",
+          "rows_total",
+          "rows_total_rounded",
+          "bytes_written",
+          "parts",
+          "percent"
+        ],
+        "type": "object"
+      },
+      "query": {
+        "additionalProperties": false,
+        "properties": {
+          "accuracy_requested": {
+            "enum": [
+              "strict",
+              "balanced"
+            ],
+            "type": "string"
+          },
+          "counter": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "site": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "site"
+            ],
+            "type": "object"
+          },
+          "dimensions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "filters": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "dimension": {
+                  "type": "string"
+                },
+                "op": {
+                  "enum": [
+                    "eq",
+                    "neq",
+                    "contains",
+                    "not_contains",
+                    "in",
+                    "not_in"
+                  ],
+                  "type": "string"
+                },
+                "values": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "dimension",
+                "op",
+                "values"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "metrics": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "period": {
+            "additionalProperties": false,
+            "properties": {
+              "complete": {
+                "type": "boolean"
+              },
+              "days": {
+                "maximum": 9007199254740991,
+                "minimum": -9007199254740991,
+                "type": "integer"
+              },
+              "end": {
+                "type": "string"
+              },
+              "preset": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "type": "string"
+              },
+              "time_zone": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end",
+              "time_zone",
+              "days",
+              "complete",
+              "preset"
+            ],
+            "type": "object"
+          },
+          "preset": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "maximum": 9007199254740991,
+                    "minimum": -9007199254740991,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id",
+                  "version"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sort": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "counter",
+          "period",
+          "metrics",
+          "dimensions",
+          "filters",
+          "sort",
+          "accuracy_requested",
+          "preset"
+        ],
+        "type": "object"
+      },
+      "schema_version": {
+        "type": "string"
+      },
+      "stage": {
+        "type": "string"
+      },
+      "state": {
+        "enum": [
+          "queued",
+          "running",
+          "waiting_quota",
+          "interrupted",
+          "partial",
+          "failed",
+          "cancelled",
+          "completed"
+        ],
+        "type": "string"
+      },
+      "updated_at": {
+        "type": "string"
+      },
+      "warnings": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "affected_fields": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "warning"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "severity",
+            "message",
+            "affected_fields"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "schema_version",
+      "kind",
+      "job_id",
+      "connection_id",
+      "state",
+      "stage",
+      "format",
+      "created_at",
+      "updated_at",
+      "finished_at",
+      "query",
+      "progress",
+      "error",
+      "artifacts",
+      "next_action",
+      "warnings"
+    ],
+    "type": "object"
+  },
+  "title": "Yandex Metrika: cancel job"
+}

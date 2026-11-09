@@ -1,0 +1,775 @@
+{
+  "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true,
+    "title": "Time series"
+  },
+  "description": "Metric dynamics in day, week or month buckets with exact calendar boundaries in the counter time zone (weekly series must start on a Monday). Flags buckets that include today or are clipped by the period. Optional dimensions return top-N segment series. Default: last 28 complete days by day.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "accuracy": {
+        "description": "strict (default): fail instead of returning sampled data. balanced: accept sampling with a warning.",
+        "enum": [
+          "strict",
+          "balanced"
+        ],
+        "type": "string"
+      },
+      "cache": {
+        "description": "default: reuse fresh cached results; refresh: always ask the API; allow_stale: fall back to older cached data if the API is down.",
+        "enum": [
+          "default",
+          "refresh",
+          "allow_stale"
+        ],
+        "type": "string"
+      },
+      "connection_id": {
+        "description": "Connection ID from metrika_status (e.g. conn_demo).",
+        "maxLength": 64,
+        "minLength": 1,
+        "type": "string"
+      },
+      "counter_id": {
+        "description": "Counter ID as a string, from metrika_list_counters.",
+        "pattern": "^\\d{1,12}$",
+        "type": "string"
+      },
+      "dimensions": {
+        "description": "Dimension IDs.",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 10,
+        "type": "array"
+      },
+      "filters": {
+        "description": "Conditions combined with AND.",
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "dimension": {
+              "description": "Dimension ID from metrika_catalog.",
+              "type": "string"
+            },
+            "op": {
+              "description": "eq, neq, contains and not_contains take one value; in and not_in take several.",
+              "enum": [
+                "eq",
+                "neq",
+                "contains",
+                "not_contains",
+                "in",
+                "not_in"
+              ],
+              "type": "string"
+            },
+            "values": {
+              "description": "Values to compare with.",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 20,
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "dimension",
+            "op",
+            "values"
+          ],
+          "type": "object"
+        },
+        "maxItems": 10,
+        "type": "array"
+      },
+      "goal_ids": {
+        "description": "Goal IDs (not names) from metrika_describe_counter; adds goal columns to a preset.",
+        "items": {
+          "pattern": "^\\d{1,12}$",
+          "type": "string"
+        },
+        "maxItems": 6,
+        "type": "array"
+      },
+      "group": {
+        "description": "Bucket size, default day.",
+        "enum": [
+          "day",
+          "week",
+          "month"
+        ],
+        "type": "string"
+      },
+      "metrics": {
+        "description": "Metric IDs (e.g. ym:s:visits, ym:s:goal<ID>visits) when no preset is used.",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 20,
+        "minItems": 1,
+        "type": "array"
+      },
+      "period": {
+        "additionalProperties": false,
+        "description": "Either {preset} or {start, end}. Dates are in the counter time zone. Default: last_7_complete_days.",
+        "properties": {
+          "end": {
+            "description": "YYYY-MM-DD, inclusive.",
+            "type": "string"
+          },
+          "preset": {
+            "description": "Named period; metrika_catalog kind='periods' lists them.",
+            "enum": [
+              "today",
+              "yesterday",
+              "last_7_complete_days",
+              "last_28_complete_days",
+              "last_complete_iso_week",
+              "last_complete_month"
+            ],
+            "type": "string"
+          },
+          "start": {
+            "description": "YYYY-MM-DD, inclusive.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "preset": {
+        "description": "Ready-made report. Mutually exclusive with metrics/dimensions.",
+        "enum": [
+          "overview",
+          "acquisition",
+          "landing_pages",
+          "devices",
+          "geography",
+          "goals"
+        ],
+        "type": "string"
+      },
+      "top_keys": {
+        "description": "With dimensions: number of segment series (largest first), default 5.",
+        "maximum": 10,
+        "minimum": 1,
+        "type": "integer"
+      }
+    },
+    "required": [
+      "connection_id",
+      "counter_id"
+    ],
+    "type": "object"
+  },
+  "name": "metrika_run_timeseries",
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "axis_source": {
+            "description": "calendar: bucket dates rebuilt from the period, as the API returns values only.",
+            "enum": [
+              "api",
+              "calendar"
+            ],
+            "type": "string"
+          },
+          "buckets": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "complete": {
+                  "description": "False if the bucket includes today.",
+                  "type": "boolean"
+                },
+                "end": {
+                  "type": "string"
+                },
+                "partial": {
+                  "description": "True if the period clips the bucket (shorter than a full week/month).",
+                  "type": "boolean"
+                },
+                "start": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "start",
+                "end",
+                "complete",
+                "partial"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "columns": {
+            "additionalProperties": false,
+            "properties": {
+              "dimensions": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "sensitive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "sensitive"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "metrics": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "aggregation": {
+                      "enum": [
+                        "additive",
+                        "non_additive",
+                        "rate",
+                        "average"
+                      ],
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "unit": {
+                      "enum": [
+                        "count",
+                        "percent",
+                        "seconds",
+                        "pages"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit",
+                    "aggregation"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "dimensions",
+              "metrics"
+            ],
+            "type": "object"
+          },
+          "period_totals": {
+            "additionalProperties": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "description": "Whole-period totals; null where buckets cannot be summed (users, rates, averages).",
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "series": {
+            "description": "Top segment series; their sum is not the total.",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "dimensions": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "name": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "redacted": {
+                        "type": "boolean"
+                      },
+                      "truncated": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "key": {
+                  "type": "string"
+                },
+                "values": {
+                  "items": {
+                    "items": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "type": "array"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "key",
+                "dimensions",
+                "values"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "totals": {
+            "description": "Per metric, one value per bucket, over all data.",
+            "items": {
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "type": "array"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "columns",
+          "axis_source",
+          "buckets",
+          "totals",
+          "period_totals",
+          "series"
+        ],
+        "type": "object"
+      },
+      "kind": {
+        "const": "timeseries",
+        "type": "string"
+      },
+      "provenance": {
+        "additionalProperties": false,
+        "properties": {
+          "adapter_version": {
+            "type": "string"
+          },
+          "cache": {
+            "additionalProperties": false,
+            "properties": {
+              "age_seconds": {
+                "type": "number"
+              },
+              "hit": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "hit",
+              "age_seconds"
+            ],
+            "type": "object"
+          },
+          "catalog_version": {
+            "type": "string"
+          },
+          "fetched_at": {
+            "type": "string"
+          },
+          "query_fingerprint": {
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "demo",
+              "yandex"
+            ],
+            "type": "string"
+          },
+          "source_method": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "source_method",
+          "fetched_at",
+          "cache",
+          "query_fingerprint",
+          "adapter_version",
+          "catalog_version"
+        ],
+        "type": "object"
+      },
+      "quality": {
+        "additionalProperties": false,
+        "properties": {
+          "contains_sensitive_data": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "data_lag_seconds": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "period_complete": {
+            "type": "boolean"
+          },
+          "rows_complete": {
+            "type": "boolean"
+          },
+          "sample_share": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sample_size": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sample_space": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sampled": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "total_rows": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          },
+          "total_rows_rounded": {
+            "type": "boolean"
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "truncation_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "page_limit",
+                  "byte_budget",
+                  "top_n"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "sampled",
+          "sample_share",
+          "sample_size",
+          "sample_space",
+          "total_rows",
+          "total_rows_rounded",
+          "rows_complete",
+          "truncated",
+          "truncation_reason",
+          "period_complete",
+          "data_lag_seconds",
+          "contains_sensitive_data"
+        ],
+        "type": "object"
+      },
+      "query": {
+        "additionalProperties": false,
+        "properties": {
+          "accuracy_requested": {
+            "enum": [
+              "strict",
+              "balanced"
+            ],
+            "type": "string"
+          },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "connection_id": {
+            "type": "string"
+          },
+          "counter": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "site": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "site"
+            ],
+            "type": "object"
+          },
+          "dimensions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "filters": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "dimension": {
+                  "type": "string"
+                },
+                "op": {
+                  "enum": [
+                    "eq",
+                    "neq",
+                    "contains",
+                    "not_contains",
+                    "in",
+                    "not_in"
+                  ],
+                  "type": "string"
+                },
+                "values": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "dimension",
+                "op",
+                "values"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "group": {
+            "enum": [
+              "day",
+              "week",
+              "month"
+            ],
+            "type": "string"
+          },
+          "metrics": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "period": {
+            "additionalProperties": false,
+            "properties": {
+              "complete": {
+                "type": "boolean"
+              },
+              "days": {
+                "maximum": 9007199254740991,
+                "minimum": -9007199254740991,
+                "type": "integer"
+              },
+              "end": {
+                "type": "string"
+              },
+              "preset": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "type": "string"
+              },
+              "time_zone": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end",
+              "time_zone",
+              "days",
+              "complete",
+              "preset"
+            ],
+            "type": "object"
+          },
+          "preset": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "maximum": 9007199254740991,
+                    "minimum": -9007199254740991,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id",
+                  "version"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "top_keys": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": -9007199254740991,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "connection_id",
+          "counter",
+          "period",
+          "group",
+          "metrics",
+          "dimensions",
+          "filters",
+          "attribution",
+          "accuracy_requested",
+          "preset",
+          "top_keys"
+        ],
+        "type": "object"
+      },
+      "request_id": {
+        "type": "string"
+      },
+      "schema_version": {
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "success",
+          "empty"
+        ],
+        "type": "string"
+      },
+      "warnings": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "affected_fields": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "warning"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "severity",
+            "message",
+            "affected_fields"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "schema_version",
+      "kind",
+      "status",
+      "request_id",
+      "query",
+      "data",
+      "quality",
+      "provenance",
+      "warnings"
+    ],
+    "type": "object"
+  },
+  "title": "Yandex Metrika: time series"
+}

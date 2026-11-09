@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Tool arguments are validated strictly: a misspelled argument, also inside `period` or `filters`, is rejected instead of being ignored.
+
 ## 1.0.0-beta.1
 
 First public beta with the full v1 scope.

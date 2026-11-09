@@ -1,0 +1,63 @@
+[
+  {
+    "arguments": [
+      {
+        "description": "Connection ID, e.g. conn_demo.",
+        "name": "connection_id",
+        "required": false
+      },
+      {
+        "description": "Counter ID.",
+        "name": "counter_id",
+        "required": false
+      }
+    ],
+    "description": "Last complete week vs the week before: traffic, sources, landing pages and goals.",
+    "name": "weekly_review",
+    "title": "Weekly site review"
+  },
+  {
+    "arguments": [
+      {
+        "description": "Connection ID, e.g. conn_demo.",
+        "name": "connection_id",
+        "required": false
+      },
+      {
+        "description": "Counter ID.",
+        "name": "counter_id",
+        "required": false
+      },
+      {
+        "description": "Metric ID, default ym:s:visits.",
+        "name": "metric",
+        "required": false
+      }
+    ],
+    "description": "Find where a drop in visits or goal completions is concentrated.",
+    "name": "traffic_drop",
+    "title": "Investigate a traffic drop"
+  },
+  {
+    "arguments": [
+      {
+        "description": "Connection ID, e.g. conn_demo.",
+        "name": "connection_id",
+        "required": false
+      },
+      {
+        "description": "Counter ID.",
+        "name": "counter_id",
+        "required": false
+      },
+      {
+        "description": "Goal ID from metrika_describe_counter.",
+        "name": "goal_id",
+        "required": false
+      }
+    ],
+    "description": "Which landing pages bring target visits for a goal.",
+    "name": "landing_conversion",
+    "title": "Landing page conversion"
+  }
+]

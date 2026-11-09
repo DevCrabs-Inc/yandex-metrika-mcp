@@ -1,0 +1,67 @@
+{
+  "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": true,
+    "readOnlyHint": false,
+    "title": "Connect"
+  },
+  "description": "Starts a browser sign-in with Yandex (read-only access). Returns a one-time local login_url for the user to open; no token or code ever passes through the chat. Pass connection_id to renew an expired connection. Afterwards call metrika_status to get the new connection_id.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "alias": {
+        "description": "Friendly name, e.g. 'Agency: client A'.",
+        "maxLength": 60,
+        "minLength": 1,
+        "type": "string"
+      },
+      "connection_id": {
+        "description": "Re-authorize an existing connection that needs a new sign-in.",
+        "maxLength": 64,
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
+  "name": "metrika_connect",
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "expires_at": {
+        "type": "string"
+      },
+      "instructions": {
+        "type": "string"
+      },
+      "kind": {
+        "const": "connect",
+        "type": "string"
+      },
+      "login_url": {
+        "description": "Local one-time page; give it to the user to open in a browser.",
+        "type": "string"
+      },
+      "schema_version": {
+        "type": "string"
+      },
+      "status": {
+        "const": "pending",
+        "type": "string"
+      }
+    },
+    "required": [
+      "schema_version",
+      "kind",
+      "status",
+      "login_url",
+      "expires_at",
+      "instructions"
+    ],
+    "type": "object"
+  },
+  "title": "Yandex Metrika: connect"
+}

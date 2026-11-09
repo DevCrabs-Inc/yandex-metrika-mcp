@@ -1,0 +1,126 @@
+{
+  "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false,
+    "readOnlyHint": true,
+    "title": "Catalog"
+  },
+  "description": "Lists what reports can use: kind='presets' (ready-made reports), 'metrics' (with unit and aggregation rules, e.g. users must never be summed), 'dimensions' or 'periods'. No API call.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "kind": {
+        "description": "What to list.",
+        "enum": [
+          "presets",
+          "metrics",
+          "dimensions",
+          "periods"
+        ],
+        "type": "string"
+      },
+      "search": {
+        "description": "Case-insensitive substring filter.",
+        "maxLength": 100,
+        "type": "string"
+      }
+    },
+    "required": [
+      "kind"
+    ],
+    "type": "object"
+  },
+  "name": "metrika_catalog",
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "catalog_kind": {
+        "enum": [
+          "presets",
+          "metrics",
+          "dimensions",
+          "periods"
+        ],
+        "type": "string"
+      },
+      "catalog_version": {
+        "type": "string"
+      },
+      "items": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "details": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                ]
+              },
+              "propertyNames": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "description",
+            "details"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "kind": {
+        "const": "catalog",
+        "type": "string"
+      },
+      "notes": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "schema_version": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "schema_version",
+      "kind",
+      "catalog_kind",
+      "catalog_version",
+      "items",
+      "notes"
+    ],
+    "type": "object"
+  },
+  "title": "Yandex Metrika: catalog"
+}

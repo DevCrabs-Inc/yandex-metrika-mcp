@@ -53,7 +53,8 @@ async function call(name: string, args: Record<string, unknown>) {
 const codes = (s: Structured) => (s.warnings ?? []).map((w) => w.code);
 
 describe("discovery", () => {
-  it("advertises the 13 contract tools with honest annotations (UX-01)", async () => {
+  it("advertises the 13 contract tools (UX-01)", async () => {
+    // Annotations, schemas and sizes are checked in test/contract/tool-surface.test.ts.
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([
       "metrika_cancel_job",
@@ -70,22 +71,6 @@ describe("discovery", () => {
       "metrika_run_timeseries",
       "metrika_status",
     ]);
-    const sideEffects = new Set([
-      "metrika_connect",
-      "metrika_disconnect",
-      "metrika_export_report",
-      "metrika_cancel_job",
-    ]);
-    for (const tool of tools) {
-      expect(tool.annotations?.readOnlyHint).toBe(!sideEffects.has(tool.name));
-      expect(tool.outputSchema).toBeDefined();
-      expect(tool.description?.length ?? 0).toBeGreaterThan(40);
-    }
-    expect(tools.find((t) => t.name === "metrika_disconnect")?.annotations?.destructiveHint).toBe(
-      true,
-    );
-    // Tool definitions are loaded into every conversation: keep them compact.
-    expect(Buffer.byteLength(JSON.stringify(tools), "utf8")).toBeLessThan(96 * 1024);
   });
 
   it("ships usage instructions and prompts", async () => {

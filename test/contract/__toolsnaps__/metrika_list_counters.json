@@ -1,0 +1,207 @@
+{
+  "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true,
+    "title": "List counters"
+  },
+  "description": "Lists Yandex Metrika (Яндекс Метрика) counters, i.e. tracked websites, available through a connection: ID, name, site, time zone and access level. Pass the ID as counter_id to other tools.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "connection_id": {
+        "description": "Connection ID from metrika_status (e.g. conn_demo).",
+        "maxLength": 64,
+        "minLength": 1,
+        "type": "string"
+      },
+      "cursor": {
+        "description": "next_cursor from a previous identical call.",
+        "maxLength": 2000,
+        "type": "string"
+      },
+      "search": {
+        "description": "Substring of counter name, site or ID.",
+        "maxLength": 100,
+        "type": "string"
+      }
+    },
+    "required": [
+      "connection_id"
+    ],
+    "type": "object"
+  },
+  "name": "metrika_list_counters",
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "connection_id": {
+        "type": "string"
+      },
+      "counters": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "permission": {
+              "enum": [
+                "own",
+                "edit",
+                "view",
+                "unknown"
+              ],
+              "type": "string"
+            },
+            "site": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "time_zone": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "site",
+            "time_zone",
+            "status",
+            "permission"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "kind": {
+        "const": "counters",
+        "type": "string"
+      },
+      "next_cursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "provenance": {
+        "additionalProperties": false,
+        "properties": {
+          "adapter_version": {
+            "type": "string"
+          },
+          "cache": {
+            "additionalProperties": false,
+            "properties": {
+              "age_seconds": {
+                "type": "number"
+              },
+              "hit": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "hit",
+              "age_seconds"
+            ],
+            "type": "object"
+          },
+          "catalog_version": {
+            "type": "string"
+          },
+          "fetched_at": {
+            "type": "string"
+          },
+          "query_fingerprint": {
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "demo",
+              "yandex"
+            ],
+            "type": "string"
+          },
+          "source_method": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "source_method",
+          "fetched_at",
+          "cache",
+          "query_fingerprint",
+          "adapter_version",
+          "catalog_version"
+        ],
+        "type": "object"
+      },
+      "schema_version": {
+        "type": "string"
+      },
+      "total": {
+        "maximum": 9007199254740991,
+        "minimum": -9007199254740991,
+        "type": "integer"
+      },
+      "warnings": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "affected_fields": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "warning"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "severity",
+            "message",
+            "affected_fields"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "schema_version",
+      "kind",
+      "connection_id",
+      "counters",
+      "total",
+      "next_cursor",
+      "provenance",
+      "warnings"
+    ],
+    "type": "object"
+  },
+  "title": "Yandex Metrika: list counters"
+}

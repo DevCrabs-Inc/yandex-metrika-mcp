@@ -16,7 +16,7 @@ import {
   warningOutput,
 } from "./common.ts";
 
-export const comparisonInput = z.object({
+export const comparisonInput = z.strictObject({
   connection_id: connectionIdInput,
   counter_id: counterIdInput,
   periods: comparisonPeriodsInput.optional(),

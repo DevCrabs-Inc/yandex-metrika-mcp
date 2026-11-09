@@ -4,6 +4,7 @@ import {
   connectionIdInput,
   counterIdInput,
   counterRefOutput,
+  cursorInput,
   fieldsInput,
   filterOutput,
   periodInput,
@@ -17,10 +18,14 @@ export const DEFAULT_ARTIFACT_CHUNK = 16 * 1024;
 
 const { cache: _cache, ...exportFields } = fieldsInput;
 
-const jobIdInput = z.string().regex(/^job_[a-z0-9]{6,40}$/, "job_id looks like job_xxxxxxxx");
+const jobIdInput = z
+  .string()
+  .regex(/^job_[a-z0-9]{6,40}$/, "job_id looks like job_xxxxxxxx")
+  .describe("Job ID from metrika_export_report.");
 const artifactIdInput = z
   .string()
-  .regex(/^art_[a-z0-9]{6,40}$/, "artifact_id looks like art_xxxxxxxx");
+  .regex(/^art_[a-z0-9]{6,40}$/, "artifact_id looks like art_xxxxxxxx")
+  .describe("Artifact ID from metrika_get_job.");
 
 // Strict: page, limit or cursor are rejected because exports always cover the full result.
 export const exportInput = z.strictObject({
@@ -31,7 +36,11 @@ export const exportInput = z.strictObject({
   counter_id: counterIdInput.optional(),
   period: periodInput.optional(),
   ...exportFields,
-  sort: z.array(z.string()).max(5).optional(),
+  sort: z
+    .array(z.string())
+    .max(5)
+    .optional()
+    .describe("Field IDs; prefix with '-' for descending. Default: first metric descending."),
   format: z
     .enum(EXPORT_FORMATS)
     .optional()
@@ -47,7 +56,7 @@ export const exportInput = z.strictObject({
 });
 export type ExportInput = z.infer<typeof exportInput>;
 
-export const jobRefInput = z.object({ connection_id: connectionIdInput, job_id: jobIdInput });
+export const jobRefInput = z.strictObject({ connection_id: connectionIdInput, job_id: jobIdInput });
 
 export const artifactOutput = z.object({
   artifact_id: z.string(),
@@ -115,10 +124,10 @@ export const jobOutput = z.object({
 });
 export type JobOutput = z.infer<typeof jobOutput>;
 
-export const readArtifactInput = z.object({
+export const readArtifactInput = z.strictObject({
   connection_id: connectionIdInput,
   artifact_id: artifactIdInput,
-  cursor: z.string().max(2000).optional().describe("next_cursor from the previous chunk."),
+  cursor: cursorInput.optional().describe("next_cursor from the previous chunk."),
   max_bytes: z
     .number()
     .int()
@@ -140,7 +149,7 @@ export const readArtifactOutput = z.object({
 });
 export type ReadArtifactOutput = z.infer<typeof readArtifactOutput>;
 
-export const connectInput = z.object({
+export const connectInput = z.strictObject({
   alias: z.string().min(1).max(60).optional().describe("Friendly name, e.g. 'Agency: client A'."),
   connection_id: connectionIdInput
     .optional()
@@ -157,7 +166,7 @@ export const connectOutput = z.object({
 });
 export type ConnectOutput = z.infer<typeof connectOutput>;
 
-export const disconnectInput = z.object({ connection_id: connectionIdInput });
+export const disconnectInput = z.strictObject({ connection_id: connectionIdInput });
 
 export const disconnectOutput = z.object({
   schema_version: z.string(),

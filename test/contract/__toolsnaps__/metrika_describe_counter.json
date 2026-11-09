@@ -1,0 +1,216 @@
+{
+  "annotations": {
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true,
+    "readOnlyHint": true,
+    "title": "Describe counter"
+  },
+  "description": "Counter settings (time zone, status, access) and its goals with IDs. Call before goal reports. Goal names can repeat, so always refer to goals by ID.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "connection_id": {
+        "description": "Connection ID from metrika_status (e.g. conn_demo).",
+        "maxLength": 64,
+        "minLength": 1,
+        "type": "string"
+      },
+      "counter_id": {
+        "description": "Counter ID as a string, from metrika_list_counters.",
+        "pattern": "^\\d{1,12}$",
+        "type": "string"
+      }
+    },
+    "required": [
+      "connection_id",
+      "counter_id"
+    ],
+    "type": "object"
+  },
+  "name": "metrika_describe_counter",
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "connection_id": {
+        "type": "string"
+      },
+      "counter": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "permission": {
+            "enum": [
+              "own",
+              "edit",
+              "view",
+              "unknown"
+            ],
+            "type": "string"
+          },
+          "site": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "time_zone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "site",
+          "time_zone",
+          "status",
+          "permission"
+        ],
+        "type": "object"
+      },
+      "goals": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "duplicate_name": {
+              "description": "Another goal has the same name: refer to goals by ID.",
+              "type": "boolean"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "type",
+            "duplicate_name"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "kind": {
+        "const": "counter",
+        "type": "string"
+      },
+      "provenance": {
+        "additionalProperties": false,
+        "properties": {
+          "adapter_version": {
+            "type": "string"
+          },
+          "cache": {
+            "additionalProperties": false,
+            "properties": {
+              "age_seconds": {
+                "type": "number"
+              },
+              "hit": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "hit",
+              "age_seconds"
+            ],
+            "type": "object"
+          },
+          "catalog_version": {
+            "type": "string"
+          },
+          "fetched_at": {
+            "type": "string"
+          },
+          "query_fingerprint": {
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "demo",
+              "yandex"
+            ],
+            "type": "string"
+          },
+          "source_method": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "source_method",
+          "fetched_at",
+          "cache",
+          "query_fingerprint",
+          "adapter_version",
+          "catalog_version"
+        ],
+        "type": "object"
+      },
+      "schema_version": {
+        "type": "string"
+      },
+      "warnings": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "affected_fields": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "warning"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "severity",
+            "message",
+            "affected_fields"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "schema_version",
+      "kind",
+      "connection_id",
+      "counter",
+      "goals",
+      "provenance",
+      "warnings"
+    ],
+    "type": "object"
+  },
+  "title": "Yandex Metrika: describe counter"
+}

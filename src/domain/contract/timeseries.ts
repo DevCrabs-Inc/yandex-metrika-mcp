@@ -20,7 +20,7 @@ export const MAX_TOP_KEYS = 10;
 export const DEFAULT_TOP_KEYS = 5;
 export const MAX_TIMESERIES_DIMENSIONS = 2;
 
-export const timeseriesInput = z.object({
+export const timeseriesInput = z.strictObject({
   connection_id: connectionIdInput,
   counter_id: counterIdInput,
   period: periodInput.optional(),

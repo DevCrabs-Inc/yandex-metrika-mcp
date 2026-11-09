@@ -4,6 +4,7 @@ import {
   connectionIdInput,
   counterIdInput,
   counterRefOutput,
+  cursorInput,
   DEFAULT_PAGE_LIMIT,
   dimensionCellOutput,
   fieldsInput,
@@ -16,7 +17,7 @@ import {
   warningOutput,
 } from "./common.ts";
 
-export const reportInput = z.object({
+export const reportInput = z.strictObject({
   connection_id: connectionIdInput,
   counter_id: counterIdInput,
   period: periodInput.optional(),
@@ -33,7 +34,7 @@ export const reportInput = z.object({
     .max(MAX_PAGE_LIMIT)
     .optional()
     .describe(`Rows per page, default ${DEFAULT_PAGE_LIMIT}.`),
-  cursor: z.string().max(2000).optional().describe("next_cursor from a previous identical call."),
+  cursor: cursorInput.optional().describe("next_cursor from a previous identical call."),
 });
 export type ReportInput = z.infer<typeof reportInput>;
 

@@ -1,12 +1,15 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { Client } from "@modelcontextprotocol/client";
+import { InMemoryTransport } from "@modelcontextprotocol/server";
 import type { Clock, Sleep } from "../src/app/ports.ts";
 import type { AppConfig } from "../src/config/load.ts";
 import { type Container, type ContainerOverrides, createContainer } from "../src/container.ts";
 import type { FetchLike } from "../src/infra/http.ts";
 import { createLogger } from "../src/infra/log/logger.ts";
 import { MemorySecretStore } from "../src/infra/secrets/stores.ts";
+import { createMcpServer } from "../src/mcp/server.ts";
 
 export const NOW = new Date("2026-11-06T09:00:00Z");
 
@@ -58,6 +61,16 @@ export async function testContainer(
     logger: createLogger("info", (l) => options.logLines?.push(l)),
     ...options.overrides,
   });
+}
+
+/** An MCP client connected in memory to a server built from the given container. */
+export async function connectClient(container: Container): Promise<Client> {
+  const server = createMcpServer(container, "0.0.0-test");
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  await server.connect(serverTransport);
+  const client = new Client({ name: "test-client", version: "1.0.0" });
+  await client.connect(clientTransport);
+  return client;
 }
 
 export interface RecordedRequest {

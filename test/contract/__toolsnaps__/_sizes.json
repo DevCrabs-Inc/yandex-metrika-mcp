@@ -1,0 +1,18 @@
+{
+  "tools": {
+    "metrika_cancel_job": 5500,
+    "metrika_catalog": 1600,
+    "metrika_compare_periods": 11900,
+    "metrika_connect": 1400,
+    "metrika_describe_counter": 2700,
+    "metrika_disconnect": 1600,
+    "metrika_export_report": 8300,
+    "metrika_get_job": 5400,
+    "metrika_list_counters": 2700,
+    "metrika_read_artifact": 2300,
+    "metrika_run_report": 9000,
+    "metrika_run_timeseries": 9500,
+    "metrika_status": 2600
+  },
+  "total": 64500
+}

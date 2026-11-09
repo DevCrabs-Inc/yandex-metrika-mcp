@@ -1,8 +1,14 @@
 import { z } from "zod";
 import { ERROR_CODES } from "../errors.ts";
-import { connectionIdInput, counterIdInput, provenanceOutput, warningOutput } from "./common.ts";
+import {
+  connectionIdInput,
+  counterIdInput,
+  cursorInput,
+  provenanceOutput,
+  warningOutput,
+} from "./common.ts";
 
-export const statusInput = z.object({
+export const statusInput = z.strictObject({
   connection_id: connectionIdInput.optional().describe("Limit the status to one connection."),
 });
 
@@ -42,7 +48,7 @@ export type StatusOutput = z.infer<typeof statusOutput>;
 
 export const CATALOG_KINDS = ["presets", "metrics", "dimensions", "periods"] as const;
 
-export const catalogInput = z.object({
+export const catalogInput = z.strictObject({
   kind: z.enum(CATALOG_KINDS).describe("What to list."),
   search: z.string().max(100).optional().describe("Case-insensitive substring filter."),
 });
@@ -67,10 +73,10 @@ export const catalogOutput = z.object({
 });
 export type CatalogOutput = z.infer<typeof catalogOutput>;
 
-export const listCountersInput = z.object({
+export const listCountersInput = z.strictObject({
   connection_id: connectionIdInput,
   search: z.string().max(100).optional().describe("Substring of counter name, site or ID."),
-  cursor: z.string().max(2000).optional(),
+  cursor: cursorInput.optional().describe("next_cursor from a previous identical call."),
 });
 
 export const counterOutput = z.object({
@@ -94,7 +100,7 @@ export const listCountersOutput = z.object({
 });
 export type ListCountersOutput = z.infer<typeof listCountersOutput>;
 
-export const describeCounterInput = z.object({
+export const describeCounterInput = z.strictObject({
   connection_id: connectionIdInput,
   counter_id: counterIdInput,
 });

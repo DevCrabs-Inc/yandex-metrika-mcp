@@ -24,9 +24,16 @@ export const counterIdInput = z.coerce
   .regex(/^\d{1,12}$/, "counter_id must be a numeric string")
   .describe("Counter ID as a string, from metrika_list_counters.");
 
+// Shared by every paged tool; each tool describes where the cursor comes from.
+export const cursorInput = z.string().max(2000);
+
+// Strict objects: a misspelled key must fail instead of silently falling back to a default.
 export const periodInput = z
-  .object({
-    preset: z.enum(PERIOD_PRESETS).optional(),
+  .strictObject({
+    preset: z
+      .enum(PERIOD_PRESETS)
+      .optional()
+      .describe("Named period; metrika_catalog kind='periods' lists them."),
     start: z.string().optional().describe("YYYY-MM-DD, inclusive."),
     end: z.string().optional().describe("YYYY-MM-DD, inclusive."),
   })
@@ -34,10 +41,12 @@ export const periodInput = z
     "Either {preset} or {start, end}. Dates are in the counter time zone. Default: last_7_complete_days.",
   );
 
-export const filterInput = z.object({
+export const filterInput = z.strictObject({
   dimension: z.string().describe("Dimension ID from metrika_catalog."),
-  op: z.enum(FILTER_OPERATORS),
-  values: z.array(z.string()).min(1).max(MAX_FILTER_VALUES),
+  op: z
+    .enum(FILTER_OPERATORS)
+    .describe("eq, neq, contains and not_contains take one value; in and not_in take several."),
+  values: z.array(z.string()).min(1).max(MAX_FILTER_VALUES).describe("Values to compare with."),
 });
 
 export const fieldsInput = {
@@ -77,12 +86,16 @@ export const fieldsInput = {
 };
 
 export const comparisonPeriodsInput = z
-  .object({
-    preset: z.enum(COMPARISON_PRESETS).optional(),
-    current: periodInput.optional(),
+  .strictObject({
+    preset: z
+      .enum(COMPARISON_PRESETS)
+      .optional()
+      .describe("Named pair of periods; metrika_catalog kind='periods' lists them."),
+    current: periodInput.optional().describe("Current period, same shape as period."),
     baseline: z
       .union([z.enum(["previous_period", "same_period_last_year"]), periodInput])
-      .optional(),
+      .optional()
+      .describe("previous_period, same_period_last_year or an explicit period."),
   })
   .describe(
     "Either {preset} or {current, baseline}. Default: last_two_complete_iso_weeks (Mon–Sun).",
