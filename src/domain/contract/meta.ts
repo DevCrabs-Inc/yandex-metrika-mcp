@@ -9,8 +9,13 @@ export const statusInput = z.object({
 export const connectionOutput = z.object({
   connection_id: z.string(),
   alias: z.string(),
-  kind: z.enum(["demo", "yandex"]),
-  state: z.enum(["ready", "needs_reconnect", "disconnected"]),
+  kind: z.enum(["demo", "env", "oauth", "token"]),
+  state: z.enum(["active", "needs_reconnect"]),
+  token_expires_at: z.string().nullable(),
+  allowed_counters: z
+    .array(z.string())
+    .nullable()
+    .describe("null: every counter the account can see."),
 });
 
 export const statusOutput = z.object({
@@ -20,11 +25,16 @@ export const statusOutput = z.object({
   capabilities: z.object({
     tools: z.array(z.string()),
     prompts: z.array(z.string()),
-    yandex_sign_in: z.boolean(),
+    browser_sign_in: z.boolean(),
     demo: z.boolean(),
+    exports: z.boolean(),
     read_only: z.literal(true),
   }),
   connections: z.array(connectionOutput),
+  pending_sign_ins: z.array(
+    z.object({ status: z.string(), expires_at: z.string(), connection_id: z.string().nullable() }),
+  ),
+  jobs: z.record(z.string(), z.number().int()).describe("Export jobs by state."),
   next_actions: z.array(z.string()),
   notes: z.array(z.string()),
 });

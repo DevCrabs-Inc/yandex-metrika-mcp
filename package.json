@@ -1,9 +1,33 @@
 {
   "name": "@devcrabs/yandex-metrika-mcp",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Read-only Yandex Metrika (Яндекс Метрика) MCP server: verifiable reports, period comparisons and time series with explicit data quality.",
+  "version": "1.0.0-beta.1",
+  "description": "Read-only MCP server for Yandex Metrika (Яндекс Метрика): verifiable reports, period comparisons, time series and CSV/JSON exports with explicit data quality.",
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "yandex",
+    "yandex-metrika",
+    "yandex-metrica",
+    "metrika",
+    "metrica",
+    "analytics",
+    "web-analytics",
+    "яндекс-метрика",
+    "claude",
+    "cursor"
+  ],
   "license": "MIT",
+  "author": "DevCrabs",
+  "homepage": "https://github.com/DevCrabs-Inc/yandex-metrika-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevCrabs-Inc/yandex-metrika-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DevCrabs-Inc/yandex-metrika-mcp/issues"
+  },
+  "mcpName": "io.github.DevCrabs-Inc/yandex-metrika-mcp",
   "type": "module",
   "engines": {
     "node": ">=22.13"
@@ -13,29 +37,40 @@
     "yandex-metrika-mcp": "dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "README.ru.md",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsdown",
-    "dev": "node --experimental-strip-types src/cli/index.ts",
+    "dev": "node src/cli/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "format": "biome check --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm lint && pnpm typecheck && pnpm test"
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "mcpb": "node scripts/build-mcpb.mjs",
+    "prepublishOnly": "pnpm check && pnpm build"
   },
   "dependencies": {
-    "@modelcontextprotocol/server": "2.4.0",
-    "zod": "4.6.7"
+    "@napi-rs/keyring": "2.1.2"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.5",
     "@modelcontextprotocol/client": "2.4.0",
+    "@modelcontextprotocol/server": "2.4.0",
     "@types/node": "^22.20.5",
     "lefthook": "2.2.2",
     "tsdown": "0.23.7",
     "typescript": "7.0.2",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "zod": "4.6.7"
   }
 }

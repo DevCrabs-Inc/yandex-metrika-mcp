@@ -10,6 +10,11 @@ export default defineConfig({
   dts: false,
   clean: true,
   sourcemap: true,
-  // One self-contained file: fast `npx` cold start and a simple MCPB bundle.
-  deps: { alwaysBundle: [/.*/], onlyBundle: false },
+  // One self-contained file for a fast `npx` cold start. The keychain module
+  // ships native binaries per platform, so it stays an external dependency.
+  deps: {
+    alwaysBundle: [/^(?!@napi-rs\/keyring)/],
+    neverBundle: ["@napi-rs/keyring"],
+    onlyBundle: false,
+  },
 });

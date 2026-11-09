@@ -13,15 +13,22 @@ import {
 } from "../domain/normalize.ts";
 import { periodWarnings, resolvePeriod } from "../domain/periods.ts";
 import { enforceAccuracy, readSampling } from "../domain/quality.ts";
-import { parseUpstreamData, schemaChanged } from "../domain/upstream.ts";
+import {
+  numericData,
+  parseUpstreamData,
+  precisionWarning,
+  schemaChanged,
+} from "../domain/upstream.ts";
 import {
   demoWarning,
   jsonBytes,
   newRequestId,
   provenance,
+  reportFetchOptions,
   STRUCTURED_BUDGET_BYTES,
+  staleWarnings,
 } from "./common.ts";
-import type { ConnectionRegistry } from "./connections.ts";
+import type { ConnectionResolver } from "./connections.ts";
 import type { Clock } from "./ports.ts";
 import {
   loadCounterContext,
@@ -32,7 +39,7 @@ import {
 } from "./query-planner.ts";
 
 export interface ReportServiceDeps {
-  readonly connections: ConnectionRegistry;
+  readonly connections: ConnectionResolver;
   readonly clock: Clock;
   readonly cursorKey: Uint8Array;
 }
@@ -69,20 +76,23 @@ export class ReportService {
       input.cursor === undefined ? 0 : decodeCursor(input.cursor, binding, cursorKey, clock.now());
     const limit = input.limit ?? DEFAULT_PAGE_LIMIT;
 
-    const raw = await connection.source.getData({
-      counterId: ctx.counter.id,
-      date1: period.start,
-      date2: period.end,
-      metrics: fields.metrics.map((m) => m.id),
-      dimensions: fields.dimensions.map((d) => d.id),
-      filters: fields.filters,
-      sort,
-      limit,
-      offset: offset + 1,
-      accuracy: upstreamAccuracy(fields.accuracy),
-    });
-    const fetchedAt = clock.now();
-    const upstream = parseUpstreamData(raw, fields.metrics.length, fields.dimensions.length);
+    const raw = await connection.source.getData(
+      {
+        counterId: ctx.counter.id,
+        date1: period.start,
+        date2: period.end,
+        metrics: fields.metrics.map((m) => m.id),
+        dimensions: fields.dimensions.map((d) => d.id),
+        filters: fields.filters,
+        sort,
+        limit,
+        offset: offset + 1,
+        accuracy: upstreamAccuracy(fields.accuracy),
+      },
+      reportFetchOptions(period.complete, input.cache),
+    );
+    const exact = parseUpstreamData(raw.body, fields.metrics.length, fields.dimensions.length);
+    const { data: upstream, approximated } = numericData(exact);
     const sampling = readSampling(upstream);
     const samplingWarnings = enforceAccuracy(sampling, fields.accuracy);
 
@@ -143,10 +153,12 @@ export class ReportService {
           totals,
         },
         quality,
-        provenance: provenance(connection, "stat/v1/data", fetchedAt, queryFingerprint),
+        provenance: provenance(connection, "stat/v1/data", raw, queryFingerprint, clock.now()),
         warnings: [
           ...demoWarning(connection),
           ...periodWarnings(period, "The period", ctx),
+          ...staleWarnings([raw], clock.now()),
+          ...(approximated ? [precisionWarning] : []),
           ...samplingWarnings,
           ...qualityWarnings(quality, { metrics: fields.metrics, hasDimensions, labelsRedacted }),
         ],

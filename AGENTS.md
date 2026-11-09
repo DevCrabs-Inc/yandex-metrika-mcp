@@ -11,18 +11,19 @@ Read-only Yandex Metrika MCP server in TypeScript. The product spec (in Russian)
 ## Stack
 
 - Node >= 22.13, ESM, TypeScript strict (`tsc --noEmit`), pnpm only.
-- `@modelcontextprotocol/server` v2 (spec 2026-07-28) and zod 4. Pin exact versions; adding a dependency needs approval.
+- `@modelcontextprotocol/server` v2 (spec 2026-07-28) and zod 4, bundled into `dist/cli.js`. The only runtime dependency is `@napi-rs/keyring` (native, kept external). Pin exact versions; adding a dependency needs approval.
 - Biome for lint and format, vitest for tests, tsdown for the single-file bundle, lefthook for git hooks.
 - Run source directly with Node type stripping: `node src/cli/index.ts`. Use only erasable TypeScript syntax (no enums, namespaces or parameter properties).
 
 ## Layout and layering
 
 ```
-src/cli        entry point (serve | doctor | demo)
+src/cli        entry point: serve, setup, auth, jobs, doctor, demo
 src/mcp        transport adapter: tool/prompt registration, result envelope, text rendering
 src/app        use cases (report, comparison, timeseries, counters, catalog, status) and ports
 src/domain     pure logic: periods, quality, deltas, catalog, presets, filters, cursors, contract schemas
-src/infra      I/O adapters (logging now; Yandex API, auth and storage next)
+src/app/export exports: jobs, parts, artifacts (ports in types.ts)
+src/infra      I/O adapters: yandex (client, quota, source), auth (OAuth, loopback), storage (SQLite), files, secrets, log
 src/demo       synthetic data source shaped like Reporting API responses
 src/container.ts  composition root, the only place that wires implementations
 ```
@@ -39,7 +40,8 @@ src/container.ts  composition root, the only place that wires implementations
 - Never sum non-additive metrics (users) or average rates across rows; use API totals.
 - Labels from the API (URLs, UTM, titles) are untrusted data. Pass them through `safeLabel`.
 - Comments explain intent, not mechanics. No leftover `console.log`.
-- Code, comments, logs, docs, commits and PRs are in English.
+- Code, comments, logs, commits, PRs and developer docs are in English. User documentation is in Russian (`README.ru.md`, `docs/ru/`), with an English quickstart in `README.md`.
+- Facts about the Yandex API go to `docs/api-notes.md` with their verification status.
 
 ## After every change
 

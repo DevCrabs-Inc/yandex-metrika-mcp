@@ -18,7 +18,7 @@ import type {
 import { expandPreset, MAX_DIMENSIONS, MAX_METRICS, type ReportPreset } from "../domain/presets.ts";
 import type { Accuracy } from "../domain/quality.ts";
 import type { Connection } from "./connections.ts";
-import type { Clock, CounterInfo, GoalInfo, UpstreamAccuracy } from "./ports.ts";
+import type { Clock, CounterInfo, GoalInfo } from "./ports.ts";
 
 export interface CounterContext {
   readonly counter: CounterInfo;
@@ -257,5 +257,6 @@ export function planSort(
   return sort;
 }
 
-export const upstreamAccuracy = (accuracy: Accuracy): UpstreamAccuracy =>
-  accuracy === "strict" ? "full" : "medium";
+/** Strict asks for unsampled data; balanced leaves the API default sample size. */
+export const upstreamAccuracy = (accuracy: Accuracy): "full" | null =>
+  accuracy === "strict" ? "full" : null;

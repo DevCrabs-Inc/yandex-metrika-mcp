@@ -1,0 +1,37 @@
+name: Bug report
+description: Something does not work as documented
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never paste OAuth tokens, authorization codes or real client data.** The output of `yandex-metrika-mcp doctor` contains none of these.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: yandex-metrika-mcp --version
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: MCP client and OS
+      placeholder: Claude Desktop 1.x on macOS 15
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error code and request_id, if any
+  - type: textarea
+    id: doctor
+    attributes:
+      label: doctor output
+      render: json

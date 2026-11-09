@@ -2,23 +2,23 @@ import { Client } from "@modelcontextprotocol/client";
 import { InMemoryTransport } from "@modelcontextprotocol/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { MAX_RESPONSE_BYTES } from "../../src/app/common.ts";
-import { createContainer } from "../../src/container.ts";
-import { createLogger } from "../../src/infra/log/logger.ts";
 import { createMcpServer } from "../../src/mcp/server.ts";
+import { NOW, tempDir, testContainer } from "../helpers.ts";
 
-const NOW = new Date("2026-11-06T09:00:00Z");
 const SHOP = "10000001";
 const BLOG = "10000002";
 const conn = { connection_id: "conn_demo" };
 
 let client: Client;
+let dir: ReturnType<typeof tempDir>;
 const logLines: string[] = [];
 
 beforeAll(async () => {
-  const container = createContainer(
-    { logLevel: "info", demoEnabled: true },
-    { clock: { now: () => NOW }, logger: createLogger("info", (l) => logLines.push(l)) },
-  );
+  dir = tempDir();
+  const container = await testContainer(dir.path, {
+    overrides: { clock: { now: () => NOW } },
+    logLines,
+  });
   const server = createMcpServer(container, "0.0.0-test");
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await server.connect(serverTransport);
@@ -28,6 +28,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await client.close();
+  dir.remove();
 });
 
 type Structured = Record<string, unknown> & {
@@ -52,24 +53,39 @@ async function call(name: string, args: Record<string, unknown>) {
 const codes = (s: Structured) => (s.warnings ?? []).map((w) => w.code);
 
 describe("discovery", () => {
-  it("advertises a small, read-only tool set with output schemas", async () => {
+  it("advertises the 13 contract tools with honest annotations (UX-01)", async () => {
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([
+      "metrika_cancel_job",
       "metrika_catalog",
       "metrika_compare_periods",
+      "metrika_connect",
       "metrika_describe_counter",
+      "metrika_disconnect",
+      "metrika_export_report",
+      "metrika_get_job",
       "metrika_list_counters",
+      "metrika_read_artifact",
       "metrika_run_report",
       "metrika_run_timeseries",
       "metrika_status",
     ]);
+    const sideEffects = new Set([
+      "metrika_connect",
+      "metrika_disconnect",
+      "metrika_export_report",
+      "metrika_cancel_job",
+    ]);
     for (const tool of tools) {
-      expect(tool.annotations?.readOnlyHint).toBe(true);
+      expect(tool.annotations?.readOnlyHint).toBe(!sideEffects.has(tool.name));
       expect(tool.outputSchema).toBeDefined();
       expect(tool.description?.length ?? 0).toBeGreaterThan(40);
     }
+    expect(tools.find((t) => t.name === "metrika_disconnect")?.annotations?.destructiveHint).toBe(
+      true,
+    );
     // Tool definitions are loaded into every conversation: keep them compact.
-    expect(Buffer.byteLength(JSON.stringify(tools), "utf8")).toBeLessThan(80 * 1024);
+    expect(Buffer.byteLength(JSON.stringify(tools), "utf8")).toBeLessThan(96 * 1024);
   });
 
   it("ships usage instructions and prompts", async () => {
@@ -95,7 +111,7 @@ describe("onboarding without a Yandex account (T16)", () => {
     expect(r.isError).toBe(false);
     expect(r.structured).toMatchObject({
       kind: "status",
-      capabilities: { yandex_sign_in: false, demo: true },
+      capabilities: { browser_sign_in: false, demo: true },
     });
     expect(r.text).toMatch(/conn_demo/);
   });
@@ -259,7 +275,7 @@ describe("comparisons and time series", () => {
       ...conn,
       counter_id: SHOP,
       group: "week",
-      period: { start: "2026-10-01", end: "2026-11-06" },
+      period: { start: "2026-10-05", end: "2026-11-06" },
       metrics: ["ym:s:visits", "ym:s:users"],
     });
     expect(r.isError).toBe(false);
@@ -268,13 +284,50 @@ describe("comparisons and time series", () => {
       period_totals: Record<string, number | null>;
     };
     expect(data.buckets[0]).toMatchObject({
-      start: "2026-10-01",
-      end: "2026-10-04",
+      start: "2026-10-05",
+      end: "2026-10-11",
+      partial: false,
+    });
+    expect(data.buckets.at(-1)).toMatchObject({
+      start: "2026-11-02",
+      end: "2026-11-06",
+      complete: false,
       partial: true,
     });
-    expect(data.buckets.at(-1)).toMatchObject({ end: "2026-11-06", complete: false });
+    expect(r.structured).toMatchObject({ data: { axis_source: "calendar" } });
     expect(data.period_totals["ym:s:visits"]).toBeTypeOf("number");
     expect(data.period_totals["ym:s:users"]).toBeNull();
+  });
+});
+
+describe("time axis safety (D-08)", () => {
+  it("refuses weekly buckets that would not start on a Monday", async () => {
+    const r = await call("metrika_run_timeseries", {
+      ...conn,
+      counter_id: SHOP,
+      group: "week",
+      period: { start: "2026-10-01", end: "2026-11-06" },
+    });
+    expect(r.structured.error?.code).toBe("INVALID_QUERY");
+    expect(r.text).toMatch(/2026-09-28/);
+  });
+
+  it("marks clipped months", async () => {
+    const r = await call("metrika_run_timeseries", {
+      ...conn,
+      counter_id: SHOP,
+      group: "month",
+      period: { start: "2026-08-15", end: "2026-10-31" },
+      metrics: ["ym:s:visits"],
+    });
+    const data = r.structured.data as {
+      buckets: { start: string; end: string; partial: boolean }[];
+    };
+    expect(data.buckets.map((b) => [b.start, b.end, b.partial])).toEqual([
+      ["2026-08-15", "2026-08-31", true],
+      ["2026-09-01", "2026-09-30", false],
+      ["2026-10-01", "2026-10-31", false],
+    ]);
   });
 });
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TIME_GROUPS } from "../timeline.ts";
 import {
   columnsOutput,
   connectionIdInput,
@@ -14,8 +15,7 @@ import {
   warningOutput,
 } from "./common.ts";
 
-export const TIME_GROUPS = ["day", "week", "month"] as const;
-export type TimeGroup = (typeof TIME_GROUPS)[number];
+export { TIME_GROUPS, type TimeGroup } from "../timeline.ts";
 export const MAX_TOP_KEYS = 10;
 export const DEFAULT_TOP_KEYS = 5;
 export const MAX_TIMESERIES_DIMENSIONS = 2;
@@ -60,6 +60,9 @@ export const timeseriesOutput = z.object({
   }),
   data: z.object({
     columns: columnsOutput,
+    axis_source: z
+      .enum(["api", "calendar"])
+      .describe("calendar: bucket dates rebuilt from the period, as the API returns values only."),
     buckets: z.array(
       z.object({
         start: z.string(),

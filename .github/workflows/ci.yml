@@ -30,3 +30,29 @@ jobs:
       - run: pnpm build
       - name: Smoke test the bundle
         run: node dist/cli.js doctor
+        env:
+          YM_MCP_SECRET_STORE: file
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Install from the packed tarball (T33)
+        run: |
+          pnpm pack --out package.tgz
+          mkdir /tmp/clean && cd /tmp/clean && npm init -y >/dev/null
+          npm install "$GITHUB_WORKSPACE/package.tgz"
+          npx yandex-metrika-mcp --version
+          YM_MCP_SECRET_STORE=file npx yandex-metrika-mcp demo
+      - run: pnpm mcpb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mcpb
+          path: build/*.mcpb

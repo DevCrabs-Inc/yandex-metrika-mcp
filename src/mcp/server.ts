@@ -7,7 +7,7 @@ import { registerTools, TOOL_NAMES } from "./tools.ts";
 export const SERVER_NAME = "yandex-metrika-mcp";
 
 export const SERVER_INSTRUCTIONS = `Read-only Yandex Metrika (Яндекс Метрика) web analytics.
-Workflow: metrika_status (connection IDs) → metrika_list_counters (counter_id) → metrika_describe_counter (time zone, goal IDs) → metrika_run_report, metrika_compare_periods or metrika_run_timeseries.
+Workflow: metrika_status (connection IDs; if none, metrika_connect and give the user the login_url) → metrika_list_counters (counter_id) → metrika_describe_counter (time zone, goal IDs) → metrika_run_report, metrika_compare_periods or metrika_run_timeseries. For all rows use metrika_export_report and poll metrika_get_job.
 When answering:
 - Always state the counter, exact dates and time zone from the result's query field.
 - If quality.sampled is true or null, do not call the numbers exact. Relay relevant warnings.
@@ -31,6 +31,9 @@ export function createMcpServer(container: Container, version: string): McpServe
   );
   const status = new StatusService({
     connections: container.connections,
+    login: container.login,
+    jobs: () => container.exports.jobsSummary(),
+    clock: container.clock,
     serverName: SERVER_NAME,
     serverVersion: version,
     tools: TOOL_NAMES,

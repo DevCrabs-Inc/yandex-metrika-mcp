@@ -5,7 +5,9 @@ export const FILTER_OPERATORS = ["eq", "neq", "contains", "not_contains", "in", 
 export type FilterOperator = (typeof FILTER_OPERATORS)[number];
 
 export const MAX_FILTERS = 10;
-export const MAX_FILTER_VALUES = 50;
+export const MAX_FILTER_VALUES = 20;
+/** The Reporting API allows up to 20 conditions per request after expansion. */
+export const MAX_FILTER_ATOMS = 20;
 export const MAX_FILTER_VALUE_LENGTH = 1000;
 
 export interface FilterCondition {
@@ -17,7 +19,7 @@ export interface FilterCondition {
 /** Validates typed filter conditions (combined with AND) against the dimension allowlist. */
 export function validateFilters(filters: readonly FilterCondition[]): FilterCondition[] {
   if (filters.length > MAX_FILTERS) throw invalidQuery(`At most ${MAX_FILTERS} filters.`);
-  return filters.map((filter) => {
+  const validated = filters.map((filter) => {
     if (findDimension(filter.dimension) === null) {
       throw invalidQuery(
         `Unknown filter dimension: ${filter.dimension}.`,
@@ -38,6 +40,13 @@ export function validateFilters(filters: readonly FilterCondition[]): FilterCond
     }
     return { dimension: filter.dimension, op: filter.op, values: [...filter.values] };
   });
+  const atoms = validated.reduce((sum, f) => sum + f.values.length, 0);
+  if (atoms > MAX_FILTER_ATOMS) {
+    throw invalidQuery(
+      `Filters expand to ${atoms} conditions; the API allows ${MAX_FILTER_ATOMS}.`,
+    );
+  }
+  return validated;
 }
 
 const quote = (value: string): string => `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
@@ -53,10 +62,14 @@ function compileCondition({ dimension, op, values }: FilterCondition): string {
       return `${dimension}=@${first}`;
     case "not_contains":
       return `${dimension}!@${first}`;
+    // Lists use documented OR/AND combinations instead of the =. operator,
+    // whose list syntax is not shown in the official examples.
     case "in":
-      return `${dimension}=.(${values.map(quote).join(",")})`;
+      return values.length === 1
+        ? `${dimension}==${first}`
+        : `(${values.map((v) => `${dimension}==${quote(v)}`).join(" OR ")})`;
     case "not_in":
-      return `${dimension}!.(${values.map(quote).join(",")})`;
+      return values.map((v) => `${dimension}!=${quote(v)}`).join(" AND ");
   }
 }
 

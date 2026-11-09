@@ -87,7 +87,7 @@ describe("filters", () => {
       { dimension: "ym:s:deviceCategory", op: "in", values: ["mobile", "tablet"] },
     ]);
     expect(compileFilters(filters)).toBe(
-      "ym:s:startURLPath=@'it\\'s\\\\' AND ym:s:deviceCategory=.('mobile','tablet')",
+      "ym:s:startURLPath=@'it\\'s\\\\' AND (ym:s:deviceCategory=='mobile' OR ym:s:deviceCategory=='tablet')",
     );
     expect(() =>
       validateFilters([{ dimension: "ym:s:x') OR (1", op: "eq", values: ["a"] }]),

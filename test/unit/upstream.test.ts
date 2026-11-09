@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { bucketsFromIntervals } from "../../src/app/timeseries-service.ts";
 import { isoDate } from "../../src/domain/dates.ts";
 import { normalizeDimensions } from "../../src/domain/normalize.ts";
 import { resolvePeriod } from "../../src/domain/periods.ts";
+import { bucketsFromIntervals } from "../../src/domain/timeline.ts";
 import { parseUpstreamByTime, parseUpstreamData } from "../../src/domain/upstream.ts";
 
 const page = (overrides: Record<string, unknown> = {}) => ({
@@ -40,7 +40,7 @@ describe("upstream schema checks (D-05, T14)", () => {
       ],
       total_rows: 0,
     };
-    expect(() => parseUpstreamByTime(bytime, 1, 0)).toThrow(/points, expected 2/);
+    expect(() => parseUpstreamByTime(bytime, 1, 0, 2)).toThrow(/points, expected 2/);
   });
 });
 

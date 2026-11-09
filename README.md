@@ -1,76 +1,71 @@
 # Yandex Metrika MCP
 
-Read-only MCP server for **Yandex Metrika** (Yandex Metrica, Яндекс Метрика) web analytics. Connect it to an AI client and get reports you can check: every number comes with its dates, time zone, filters, sampling status and provenance.
+Read-only MCP server for **Yandex Metrika** (Yandex Metrica, Яндекс Метрика). Connect it to Claude, Cursor, VS Code, Codex or any MCP client and ask about traffic, sources, landing pages and goals. Every answer comes with exact dates, the counter time zone, sampling status, filters and provenance, so the numbers can be checked.
 
-> **Status: pre-alpha.** Only the synthetic demo connection works today. Yandex sign-in, exports and packaged releases (npm, MCPB) are not available yet. Nothing is published to npm.
+**Документация на русском: [README.ru.md](README.ru.md) и [docs/ru](docs/ru/README.md).**
 
-## What it does
+> Status: **1.0.0-beta.1**. All v1 features are implemented and covered by tests against synthetic data and a simulated API. Live reconciliation with the Yandex Metrika interface and the client compatibility matrix are still in progress; see [docs/release-checklist.md](docs/release-checklist.md).
 
-| Tool                       | Purpose                                                                                 |
-| -------------------------- | --------------------------------------------------------------------------------------- |
-| `metrika_status`           | Server version, connections and the next step. Works without sign-in.                   |
-| `metrika_catalog`          | Presets, metrics (with unit and aggregation rules), dimensions and period presets.      |
-| `metrika_list_counters`    | Counters (sites) available through a connection.                                        |
-| `metrika_describe_counter` | Counter time zone and goals with IDs.                                                   |
-| `metrika_run_report`       | One-period report: presets or explicit metrics/dimensions, filters, sorting, paging.    |
-| `metrika_compare_periods`  | Two periods under identical conditions: absolute, percent and percentage-point changes. |
-| `metrika_run_timeseries`   | Day, week or month buckets with exact calendar boundaries.                              |
+## Why this server
 
-Prompts: `weekly_review`, `traffic_drop`, `landing_conversion`.
+- **Sign in through the browser.** No token pasting, no OAuth app of your own; the token never enters the chat.
+- **Numbers you can verify.** Calendar periods in the counter time zone, complete days by default, strict accuracy that refuses sampled data instead of calling it exact, API totals instead of sums of visible rows.
+- **Several accounts and clients.** Isolated connections with their own counters; nothing is shared between them.
+- **Full exports.** Background CSV/JSON export of every row with checksums, a manifest and resume after a restart.
+- **Small, predictable surface.** 13 tools, 3 prompts. Read-only: no write endpoints, no raw HTTP tool.
 
-## Data correctness rules
+## Quick start
 
-- Periods are calendar dates in the **counter time zone**. Defaults use complete days: the last 7 complete days for reports and the last two complete ISO weeks (Mon–Sun) for comparisons.
-- `accuracy: "strict"` (the default) refuses sampled or unverifiable data instead of presenting it as exact. `"balanced"` accepts sampling and always says so.
-- Unknown stays unknown. A missing `sampled` flag is not "not sampled", a segment missing from a top-N list is not zero, and a zero baseline has no percent change.
-- Totals come from the API. Users are never summed across rows, and rates are never averaged.
-- Goal reaches are completions, not leads.
-- No implicit robot filters or attribution changes. Every condition is visible in the result's `query`.
-- Responses stay under 48 KiB. When rows are cut, the result says why and returns a signed cursor for the next page.
-
-## Try it from source
-
-Requires Node.js 22.13 or later and pnpm.
+Requires Node.js 22.13 or later.
 
 ```bash
-pnpm install
-pnpm build
-node dist/cli.js demo     # sample week-over-week comparison on synthetic data
-node dist/cli.js doctor   # environment report, no secrets
+npx -y @devcrabs/yandex-metrika-mcp setup --client claude-desktop   # or cursor, vscode, windsurf, codex, claude-code
 ```
 
-Add it to Claude Code:
+Restart the client and ask: _"Connect Yandex Metrika and compare the last two weeks by traffic source."_ The assistant calls `metrika_connect` and gives you a local sign-in link.
 
-```bash
-claude mcp add yandex-metrika -- node /absolute/path/to/yandex-metrika-mcp/dist/cli.js
-```
-
-Or to any client that takes a JSON config (Claude Desktop, Cursor and others):
+Manual configuration for any client:
 
 ```json
 {
   "mcpServers": {
-    "yandex-metrika": {
-      "command": "node",
-      "args": ["/absolute/path/to/yandex-metrika-mcp/dist/cli.js"]
-    }
+    "yandex-metrika": { "command": "npx", "args": ["-y", "@devcrabs/yandex-metrika-mcp"] }
   }
 }
 ```
 
-Then ask: "Use the demo connection and compare the last two weeks by traffic source."
+Claude Desktop users can also install the `.mcpb` bundle from the GitHub release. Try it without an account: the synthetic `conn_demo` connection is always available.
+
+## Tools
+
+| Tool                                                                                         | Purpose                                                                |
+| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `metrika_status`                                                                             | Connections, exports and the next step. Works before sign-in.          |
+| `metrika_connect` / `metrika_disconnect`                                                     | Browser sign-in; local removal of a connection and its token.          |
+| `metrika_list_counters` / `metrika_describe_counter`                                         | Sites, time zones and goals with IDs.                                  |
+| `metrika_catalog`                                                                            | Presets, metrics (with aggregation rules), dimensions, period presets. |
+| `metrika_run_report`                                                                         | One period: presets or explicit fields, filters, sorting, paging.      |
+| `metrika_compare_periods`                                                                    | Two periods under identical conditions: absolute, % and p.p. changes.  |
+| `metrika_run_timeseries`                                                                     | Day, week or month buckets with exact calendar boundaries.             |
+| `metrika_export_report` / `metrika_get_job` / `metrika_cancel_job` / `metrika_read_artifact` | Full CSV/JSON exports as resumable background jobs.                    |
+
+Prompts: `weekly_review`, `traffic_drop`, `landing_conversion`.
+
+## Data and privacy
+
+Report data you request is sent to your AI client and its model provider; tokens never are. Tokens live in the OS credential store (macOS Keychain, Windows Credential Manager, Linux Secret Service). Without one, the server refuses to store tokens unless you explicitly choose an unencrypted user-only file. URL query strings are removed from labels by default. No telemetry. Details: [docs/ru/privacy-security.md](docs/ru/privacy-security.md).
 
 ## Development
 
 ```bash
-make setup    # install dependencies and git hooks
-pnpm dev      # run the server from source over stdio
-pnpm check    # lint, typecheck and tests
-make inspect  # open the MCP Inspector against the built server
+pnpm install
+pnpm check        # Biome, tsc, vitest
+pnpm build        # dist/cli.js
+pnpm mcpb         # build/yandex-metrika-mcp-<version>.mcpb
 ```
 
-See [AGENTS.md](AGENTS.md) for architecture and coding rules.
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). Security reports: [SECURITY.md](SECURITY.md).
 
 ## License
 
-MIT
+MIT © DevCrabs

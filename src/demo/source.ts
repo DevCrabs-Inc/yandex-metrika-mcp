@@ -5,6 +5,7 @@ import type {
   DataRequest,
   GoalInfo,
   MetrikaSource,
+  SourceResponse,
 } from "../app/ports.ts";
 import {
   addDays,
@@ -190,7 +191,7 @@ export class DemoSource implements MetrikaSource {
     return this._counter(counterId).goals;
   }
 
-  async getData(request: DataRequest): Promise<unknown> {
+  async getData(request: DataRequest): Promise<SourceResponse> {
     const counter = this._counter(request.counterId);
     const readers = request.metrics.map((id) => metricReader(id, counter));
     const days = daysInclusive(request.date1, request.date2);
@@ -216,7 +217,7 @@ export class DemoSource implements MetrikaSource {
     });
   }
 
-  async getByTime(request: ByTimeRequest): Promise<unknown> {
+  async getByTime(request: ByTimeRequest): Promise<SourceResponse> {
     const counter = this._counter(request.counterId);
     const readers = request.metrics.map((id) => metricReader(id, counter));
     const intervals = this._intervals(request.date1, request.date2, request.group);
@@ -252,7 +253,6 @@ export class DemoSource implements MetrikaSource {
       data,
       totals: series(perBucket.total, true),
       total_rows: totalRows,
-      time_intervals: intervals,
     });
   }
 
@@ -396,20 +396,21 @@ export class DemoSource implements MetrikaSource {
 
   private _envelope(
     counter: DemoCounter,
-    request: { readonly date2: IsoDate; readonly accuracy: string },
+    request: { readonly date2: IsoDate; readonly accuracy: string | null },
     days: number,
     body: Record<string, unknown>,
-  ): Record<string, unknown> {
+  ): SourceResponse {
     const today = todayIn(counter.info.time_zone ?? "UTC", this._clock.now());
     const sampled = counter.sampledAboveDays !== null && days > counter.sampledAboveDays;
-    return {
+    const upstream = {
       ...body,
       total_rows_rounded: false,
       sampled,
       sample_share: sampled ? SAMPLE_SHARE : 1,
       data_lag: request.date2 === today ? 300 : 0,
       contains_sensitive_data: false,
-      query: { attribution: "lastsign", accuracy: request.accuracy },
+      query: { accuracy: request.accuracy ?? "default" },
     };
+    return { body: upstream, fetchedAt: this._clock.now(), cacheHit: false, stale: false };
   }
 }

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.DevCrabs-Inc/yandex-metrika-mcp",
+  "title": "Yandex Metrika",
+  "description": "Read-only Yandex Metrika (Яндекс Метрика) analytics: verifiable reports, comparisons, time series and exports.",
+  "repository": {
+    "url": "https://github.com/DevCrabs-Inc/yandex-metrika-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0-beta.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@devcrabs/yandex-metrika-mcp",
+      "version": "1.0.0-beta.1",
+      "transport": { "type": "stdio" },
+      "environmentVariables": [
+        {
+          "name": "YM_MCP_CLIENT_ID",
+          "description": "Optional: your own Yandex OAuth app client ID (public PKCE client, no secret).",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "YANDEX_METRIKA_TOKEN",
+          "description": "Optional: an existing OAuth token with metrika:read, for headless setups.",
+          "isRequired": false,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

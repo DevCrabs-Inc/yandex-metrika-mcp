@@ -5,6 +5,8 @@ import { MAX_DIMENSIONS, MAX_GOALS_PER_QUERY, MAX_METRICS, REPORT_PRESETS } from
 import { ACCURACY_MODES } from "../quality.ts";
 
 export const SCHEMA_VERSION = "1.0";
+export const CACHE_MODES = ["default", "refresh", "allow_stale"] as const;
+export type CacheMode = (typeof CACHE_MODES)[number];
 export const MAX_PAGE_LIMIT = 200;
 export const DEFAULT_PAGE_LIMIT = 20;
 
@@ -60,6 +62,12 @@ export const fieldsInput = {
     .max(MAX_FILTERS)
     .optional()
     .describe("Conditions combined with AND."),
+  cache: z
+    .enum(CACHE_MODES)
+    .optional()
+    .describe(
+      "default: reuse fresh cached results; refresh: always ask the API; allow_stale: fall back to older cached data if the API is down.",
+    ),
   accuracy: z
     .enum(ACCURACY_MODES)
     .optional()

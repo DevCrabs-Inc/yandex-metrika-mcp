@@ -7,7 +7,7 @@ import { fingerprint } from "../domain/fingerprint.ts";
 import { safeLabel } from "../domain/privacy.ts";
 import type { Warning } from "../domain/warnings.ts";
 import { demoWarning, provenance } from "./common.ts";
-import type { ConnectionRegistry } from "./connections.ts";
+import type { ConnectionResolver } from "./connections.ts";
 import type { Clock, CounterInfo } from "./ports.ts";
 
 export const COUNTERS_PAGE_SIZE = 50;
@@ -19,7 +19,7 @@ const safeCounter = (c: CounterInfo): CounterInfo => ({
 });
 
 export interface CounterServiceDeps {
-  readonly connections: ConnectionRegistry;
+  readonly connections: ConnectionResolver;
   readonly clock: Clock;
   readonly cursorKey: Uint8Array;
 }
@@ -79,8 +79,9 @@ export class CounterService {
       provenance: provenance(
         connection,
         "management/v1/counters",
-        clock.now(),
+        { fetchedAt: clock.now(), cacheHit: false },
         binding.fingerprint,
+        clock.now(),
       ),
       warnings,
     };
@@ -143,8 +144,9 @@ export class CounterService {
       provenance: provenance(
         connection,
         "management/v1/counter + goals",
-        clock.now(),
+        { fetchedAt: clock.now(), cacheHit: false },
         fingerprint({ op: "describe_counter", counter: counter.id }),
+        clock.now(),
       ),
       warnings,
     };

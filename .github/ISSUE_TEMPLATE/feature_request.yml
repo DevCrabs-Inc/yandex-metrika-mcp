@@ -1,0 +1,14 @@
+name: Feature request
+description: Suggest a report, preset or improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: task
+    attributes:
+      label: What do you want to find out or do?
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: How do you do it today?

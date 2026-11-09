@@ -15,11 +15,17 @@ import {
 } from "../domain/normalize.ts";
 import { comparisonWarnings, type ResolvedPeriod, resolveComparison } from "../domain/periods.ts";
 import { enforceAccuracy, readSampling, type SamplingReading } from "../domain/quality.ts";
-import { parseUpstreamData } from "../domain/upstream.ts";
+import { numericData, parseUpstreamData, precisionWarning } from "../domain/upstream.ts";
 import type { Warning } from "../domain/warnings.ts";
-import { demoWarning, newRequestId, provenance } from "./common.ts";
-import type { Connection, ConnectionRegistry } from "./connections.ts";
-import type { Clock } from "./ports.ts";
+import {
+  demoWarning,
+  newRequestId,
+  provenance,
+  reportFetchOptions,
+  staleWarnings,
+} from "./common.ts";
+import type { Connection, ConnectionResolver } from "./connections.ts";
+import type { CacheMode, Clock, SourceResponse } from "./ports.ts";
 import {
   type CounterContext,
   loadCounterContext,
@@ -35,6 +41,7 @@ export const COMPARISON_FETCH_ROWS = 100;
 const SMALL_VOLUME_VISITS = 100;
 
 interface PeriodData {
+  readonly response: SourceResponse;
   readonly period: ResolvedPeriod;
   readonly totals: readonly (number | null)[];
   readonly rows: ReadonlyMap<
@@ -50,7 +57,7 @@ interface PeriodData {
 }
 
 export interface ComparisonServiceDeps {
-  readonly connections: ConnectionRegistry;
+  readonly connections: ConnectionResolver;
   readonly clock: Clock;
 }
 
@@ -70,9 +77,8 @@ export class ComparisonService {
     const sort = planSort(undefined, fields);
 
     // Sequential on purpose: both requests share the same per-user quota.
-    const baseline = await this._fetch(connection, ctx, fields, sort, cmp.baseline);
-    const current = await this._fetch(connection, ctx, fields, sort, cmp.current);
-    const fetchedAt = clock.now();
+    const baseline = await this._fetch(connection, ctx, fields, sort, cmp.baseline, input.cache);
+    const current = await this._fetch(connection, ctx, fields, sort, cmp.current, input.cache);
 
     const metrics = fields.metrics;
     const totals = Object.fromEntries(
@@ -112,6 +118,7 @@ export class ComparisonService {
     const warnings: Warning[] = [
       ...demoWarning(connection),
       ...comparisonWarnings(cmp, ctx),
+      ...staleWarnings([baseline.response, current.response], clock.now()),
       ...baseline.warnings.map((w) => ({ ...w, message: `Baseline: ${w.message}` })),
       ...current.warnings.map((w) => ({ ...w, message: `Current: ${w.message}` })),
       ...qualityWarnings(current.quality, {
@@ -166,7 +173,12 @@ export class ComparisonService {
       provenance: provenance(
         connection,
         "stat/v1/data x2",
-        fetchedAt,
+        {
+          fetchedAt: new Date(
+            Math.min(baseline.response.fetchedAt.getTime(), current.response.fetchedAt.getTime()),
+          ),
+          cacheHit: baseline.response.cacheHit && current.response.cacheHit,
+        },
         fingerprint({
           connection: connection.id,
           counter: ctx.counter.id,
@@ -178,6 +190,7 @@ export class ComparisonService {
           filters: fields.filters,
           accuracy: fields.accuracy,
         }),
+        clock.now(),
       ),
       warnings,
     };
@@ -189,23 +202,32 @@ export class ComparisonService {
     fields: PlannedFields,
     sort: readonly string[],
     period: ResolvedPeriod,
+    cache: CacheMode | undefined,
   ): Promise<PeriodData> {
     const hasDimensions = fields.dimensions.length > 0;
-    const raw = await connection.source.getData({
-      counterId: ctx.counter.id,
-      date1: period.start,
-      date2: period.end,
-      metrics: fields.metrics.map((m) => m.id),
-      dimensions: fields.dimensions.map((d) => d.id),
-      filters: fields.filters,
-      sort,
-      limit: COMPARISON_FETCH_ROWS,
-      offset: 1,
-      accuracy: upstreamAccuracy(fields.accuracy),
-    });
-    const upstream = parseUpstreamData(raw, fields.metrics.length, fields.dimensions.length);
+    const raw = await connection.source.getData(
+      {
+        counterId: ctx.counter.id,
+        date1: period.start,
+        date2: period.end,
+        metrics: fields.metrics.map((m) => m.id),
+        dimensions: fields.dimensions.map((d) => d.id),
+        filters: fields.filters,
+        sort,
+        limit: COMPARISON_FETCH_ROWS,
+        offset: 1,
+        accuracy: upstreamAccuracy(fields.accuracy),
+      },
+      reportFetchOptions(period.complete, cache),
+    );
+    const { data: upstream, approximated } = numericData(
+      parseUpstreamData(raw.body, fields.metrics.length, fields.dimensions.length),
+    );
     const sampling = readSampling(upstream);
-    const warnings = enforceAccuracy(sampling, fields.accuracy);
+    const warnings = [
+      ...enforceAccuracy(sampling, fields.accuracy),
+      ...(approximated ? [precisionWarning] : []),
+    ];
     const rows = new Map<
       string,
       { cells: readonly DimensionCell[]; values: readonly (number | null)[] }
@@ -221,6 +243,7 @@ export class ComparisonService {
     const complete =
       !hasDimensions || (!upstream.total_rows_rounded && rows.size >= upstream.total_rows);
     return {
+      response: raw,
       period,
       totals: upstream.totals,
       rows,

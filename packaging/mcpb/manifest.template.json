@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/mcpb/main/schemas/mcpb-manifest-v0.3.schema.json",
+  "manifest_version": "0.3",
+  "name": "yandex-metrika-mcp",
+  "display_name": "Yandex Metrika",
+  "version": "__VERSION__",
+  "description": "Read-only Yandex Metrika (Яндекс Метрика) reports, period comparisons, time series and exports with explicit data quality.",
+  "long_description": "Sign in with Yandex in the browser (no token in the chat), pick counters and ask your AI client about traffic, sources, landing pages and goals. Every answer states dates, time zone, sampling and filters. Read-only: nothing in Yandex Metrika can be changed.",
+  "author": { "name": "DevCrabs", "url": "https://github.com/DevCrabs-Inc" },
+  "repository": { "type": "git", "url": "https://github.com/DevCrabs-Inc/yandex-metrika-mcp" },
+  "homepage": "https://github.com/DevCrabs-Inc/yandex-metrika-mcp",
+  "documentation": "https://github.com/DevCrabs-Inc/yandex-metrika-mcp/blob/main/docs/ru/README.md",
+  "support": "https://github.com/DevCrabs-Inc/yandex-metrika-mcp/issues",
+  "license": "MIT",
+  "keywords": ["yandex", "metrika", "metrica", "analytics", "яндекс метрика"],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/cli.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/cli.js"],
+      "env": { "YM_MCP_CLIENT_ID": "${user_config.client_id}" }
+    }
+  },
+  "tools": [
+    { "name": "metrika_status", "description": "Connections, export jobs and the next step." },
+    {
+      "name": "metrika_connect",
+      "description": "Sign in with Yandex in the browser (read-only access)."
+    },
+    {
+      "name": "metrika_disconnect",
+      "description": "Remove a connection and its token from this computer."
+    },
+    {
+      "name": "metrika_list_counters",
+      "description": "Counters (sites) available through a connection."
+    },
+    { "name": "metrika_describe_counter", "description": "Counter time zone and goals with IDs." },
+    {
+      "name": "metrika_catalog",
+      "description": "Presets, metrics, dimensions and period presets."
+    },
+    {
+      "name": "metrika_run_report",
+      "description": "One-period report with totals, quality and provenance."
+    },
+    { "name": "metrika_compare_periods", "description": "Two periods under identical conditions." },
+    {
+      "name": "metrika_run_timeseries",
+      "description": "Day, week or month dynamics with exact buckets."
+    },
+    { "name": "metrika_export_report", "description": "Background CSV/JSON export of all rows." },
+    { "name": "metrika_get_job", "description": "Export progress and result files." },
+    { "name": "metrika_cancel_job", "description": "Cancel an export." },
+    { "name": "metrika_read_artifact", "description": "Read a finished export file in chunks." }
+  ],
+  "prompts_generated": true,
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": { "node": ">=22.13.0" }
+  },
+  "user_config": {
+    "client_id": {
+      "type": "string",
+      "title": "Own OAuth client ID (optional)",
+      "description": "Leave empty to use the built-in DevCrabs application.",
+      "required": false,
+      "default": ""
+    }
+  }
+}
