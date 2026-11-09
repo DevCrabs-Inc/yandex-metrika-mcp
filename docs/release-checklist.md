@@ -18,7 +18,7 @@ Status of the release gates from the product spec (G0–G3). An item is done onl
 
 ## Needs people or accounts (blocks the public "production" claim)
 
-- [ ] Register the DevCrabs OAuth app in Yandex ID (`metrika:read`, redirect URIs `http://127.0.0.1:47613…47615/callback`), put its client ID into `src/config/oauth-app.ts`.
+- [x] Register the DevCrabs OAuth app in Yandex ID (`metrika:read`, redirect URIs `http://127.0.0.1:47613…47615/callback`), put its client ID into `src/config/oauth-app.ts` (2026-11-09; credentials in 1Password "Dev Env").
 - [ ] G0 live check of the flow: new account, consent, deny, expired code, replay, token lifetime, refresh without secret.
 - [ ] Re-verify the items in [api-notes.md](api-notes.md) marked as not verified (week buckets, management fields, error body).
 - [ ] Live reconciliation with the Metrika UI for overview, sources, landing pages, devices, a goal, a time series, a comparison and a multi-page export.

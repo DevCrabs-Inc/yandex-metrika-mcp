@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Browser sign-in works out of the box with the registered DevCrabs OAuth app in Yandex ID (read-only `metrika:read`); `YM_MCP_CLIENT_ID` is only needed for your own app.
 - The npm package is `@dev-crabs/yandex-metrika-mcp` (scope of the npm organisation `dev-crabs`); install with `npx -y @dev-crabs/yandex-metrika-mcp`.
 - Labels, counter names, goal names and connection aliases lose control and invisible characters (bidi controls, zero-width characters, Unicode tags); results say so with `LABELS_SANITIZED`. Report context no longer bypasses label sanitizing, truncation never splits an emoji, and goal names that look identical after sanitizing are flagged as duplicates.
 - Text summaries put rows, segments, counter and goal lists and artifact text inside an `<untrusted-data-…>` block with a fresh random tag and a warning before and after it. Report, comparison and time-series descriptions say the same.
