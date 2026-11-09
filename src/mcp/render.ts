@@ -29,6 +29,8 @@ type Column = ReportOutput["data"]["columns"]["metrics"][number];
 type Delta = ComparisonOutput["data"]["totals"][string];
 type Period = ReportOutput["query"]["period"];
 type Warnings = ReportOutput["warnings"];
+type Filters = ReportOutput["query"]["filters"];
+type Quality = ReportOutput["quality"];
 
 const groupInt = (value: number): string =>
   Math.round(value)
@@ -101,6 +103,29 @@ export function untrusted(lines: readonly string[]): string[] {
 const counterLine = (c: { id: string; name: string; site: string }): string =>
   `${inline(c.name)} (${inline(c.site)}), counter ${c.id}`;
 
+// Conditions are always visible, so a filtered number is never read as the whole site.
+const filterLines = (filters: Filters): string[] =>
+  filters.length === 0
+    ? []
+    : [
+        `Filters: ${filters.map((f) => `${f.dimension} ${f.op} ${inline(f.values.join(", "))}`).join(" AND ")}`,
+      ];
+
+const CUT_REASONS: Readonly<Record<NonNullable<Quality["truncation_reason"]>, string>> = {
+  page_limit: "page limit, more rows exist",
+  byte_budget: "response size budget, more rows exist",
+  top_n: "only the top segments were fetched, other segments are unknown, not zero",
+};
+
+const cutLines = (...qualities: readonly Quality[]): string[] => {
+  const reasons = [
+    ...new Set(qualities.flatMap((q) => (q.truncation_reason ? [q.truncation_reason] : []))),
+  ];
+  return reasons.length === 0
+    ? []
+    : [`Rows were cut: ${reasons.map((r) => CUT_REASONS[r]).join("; ")}.`];
+};
+
 const periodText = (p: Period): string =>
   `${p.start} – ${p.end} (${p.days} day${p.days === 1 ? "" : "s"}, ${p.time_zone}${p.complete ? "" : ", INCOMPLETE: includes today"})`;
 
@@ -133,8 +158,10 @@ export function renderReport(o: ReportOutput): string {
     ...demoBanner(o.provenance.source),
     `Yandex Metrika report: ${counterLine(o.query.counter)}`,
     `Period: ${periodText(o.query.period)}${o.query.preset ? `. Preset: ${o.query.preset.id} v${o.query.preset.version}` : ""}`,
+    ...filterLines(o.query.filters),
     `Quality: ${samplingSummary(o.quality)}.`,
     totalsLine(columns.metrics, o.data.totals),
+    ...cutLines(o.quality),
   ];
   if (o.status === "empty") lines.push("No matching data for this period and filters.");
   if (columns.dimensions.length > 0 && rows.length > 0) {
@@ -170,7 +197,9 @@ export function renderComparison(o: ComparisonOutput): string {
     `Yandex Metrika comparison: ${counterLine(o.query.counter)}`,
     `Current: ${periodText(o.query.current)}`,
     `Baseline: ${periodText(o.query.baseline)}`,
+    ...filterLines(o.query.filters),
     `Quality: current ${samplingSummary(o.quality.current)}; baseline ${samplingSummary(o.quality.baseline)}.`,
+    ...cutLines(o.quality.current, o.quality.baseline),
     ...columns.metrics.map((m) => {
       const d = o.data.totals[m.id];
       if (!d) return `${inline(m.label)}: unknown`;
@@ -196,6 +225,9 @@ export function renderComparison(o: ComparisonOutput): string {
         ),
       ),
     );
+    if (o.data.rows.length > PREVIEW_ROWS) {
+      lines.push(`(${o.data.rows.length - PREVIEW_ROWS} more segments in structured content)`);
+    }
   }
   lines.push(...warningLines(o.warnings));
   return lines.join("\n");
@@ -208,7 +240,9 @@ export function renderTimeseries(o: TimeseriesOutput): string {
     ...demoBanner(o.provenance.source),
     `Yandex Metrika time series: ${counterLine(o.query.counter)}`,
     `Period: ${periodText(o.query.period)}, ${buckets.length} ${o.query.group} buckets (${buckets[0]?.start ?? "?"} … ${buckets.at(-1)?.end ?? "?"}).`,
+    ...filterLines(o.query.filters),
     `Quality: ${samplingSummary(o.quality)}.`,
+    ...cutLines(o.quality),
   ];
   const maxInline = 31;
   columns.metrics.forEach((m, i) => {
