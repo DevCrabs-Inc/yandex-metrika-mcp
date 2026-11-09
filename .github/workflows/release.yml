@@ -31,8 +31,8 @@ jobs:
       - name: Pack the package that CI tested
         run: pnpm pack --out package.tgz
       - name: Publish to npm
-        # npm, not pnpm: npm 11 exchanges the GitHub OIDC token itself when a trusted
-        # publisher is configured for the package; until then NPM_TOKEN is used.
+        # npm, not pnpm: npm 11 exchanges the GitHub OIDC token itself through the
+        # trusted publisher configured for this workflow; no npm token is stored.
         # npm supports provenance only from public repositories.
         # A version already on npm (for example published by hand with 2FA) is skipped,
         # so the rest of the release can run. While no stable version exists, a
@@ -53,7 +53,6 @@ jobs:
           esac
           npm publish package.tgz --access public --tag "$tag"
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: ${{ github.event.repository.private && 'false' || 'true' }}
       - name: Release notes from the changelog
         run: |

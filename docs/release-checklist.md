@@ -43,7 +43,8 @@ Status of the release gates G0–G3 defined in [requirements.md](requirements.md
 - [x] `1.0.0-beta.1` published to npm by hand with 2FA (2026-11-09) for the live sign-in check: the account requires 2FA, which a token in CI cannot supply. npm also created a `0.0.0-stage` placeholder version for its staged publishing.
 - [x] Trusted publishing for `release.yml` (npmjs.com → the package → Settings → Trusted publishing → GitHub Actions, `DevCrabs-Inc` / `yandex-metrika-mcp` / `release.yml`).
 - [x] `v1.0.0` (2026-11-09): CI published npm `latest` with provenance and the GitHub release with notes and the MCPB. The MCP Registry entry `io.github.DevCrabs-Inc/yandex-metrika-mcp` 1.0.0 was published from main by the MCP Registry workflow after the description was shortened to the 100-character limit.
-- [ ] Delete the `NPM_TOKEN` secret, revoke the token on npmjs.com and set the package to "Require two-factor authentication and disallow tokens".
+- [x] `NPM_TOKEN` repository secret deleted; `release.yml` publishes through trusted publishing only (2026-11-09).
+- [ ] Revoke the old token on npmjs.com and set the package to "Require two-factor authentication and disallow tokens".
 - [ ] Every version bump updates `.cursor-plugin/plugin.json`, `plugins/claude/.claude-plugin/plugin.json` and the pinned version in `plugins/claude/.mcp.json`; `test/unit/packaging.test.ts` fails otherwise.
 
 ## Listings after the release
