@@ -38,20 +38,19 @@ Status of the release gates G0–G3 defined in [requirements.md](requirements.md
 
 ## Publishing
 
-- [ ] The npm organisation matches the package scope in `package.json` (`@dev-crabs/…` needs the org `dev-crabs`, which exists since 2026-11-09).
-- [ ] First publish: a granular access token with read and write access to the org's packages, saved as the repository secret `NPM_TOKEN`. The release job runs on Node 26 and publishes the packed tarball with `npm publish`.
-- [ ] After the first release: npmjs.com → the package → Settings → Trusted publishing → GitHub Actions, organisation `DevCrabs-Inc`, repository `yandex-metrika-mcp`, workflow `release.yml`. Then delete the `NPM_TOKEN` secret and set Publishing access to "Require two-factor authentication and disallow tokens". Trusted publishing is configured per package, so it needs the package to exist.
-- [ ] Provenance: npm generates it only from public repositories; the release job turns it on automatically once the repository is public. Enable private vulnerability reporting, which SECURITY.md points to.
-- [x] `1.0.0-beta.1` published to npm by hand with 2FA (2026-11-09) for the live sign-in check; CI could not publish because the account requires 2FA.
-- [ ] Configure trusted publishing for the package, then delete the `NPM_TOKEN` secret.
-- [ ] Tag `v1.0.0`; the release workflow publishes npm, the GitHub release with notes from this changelog, the MCPB and the MCP Registry entry.
+- [x] npm organisation `dev-crabs`; the package is `@dev-crabs/yandex-metrika-mcp`.
+- [x] Repository public, private vulnerability reporting enabled (2026-11-09).
+- [x] `1.0.0-beta.1` published to npm by hand with 2FA (2026-11-09) for the live sign-in check: the account requires 2FA, which a token in CI cannot supply. npm also created a `0.0.0-stage` placeholder version for its staged publishing.
+- [x] Trusted publishing for `release.yml` (npmjs.com → the package → Settings → Trusted publishing → GitHub Actions, `DevCrabs-Inc` / `yandex-metrika-mcp` / `release.yml`).
+- [x] `v1.0.0` (2026-11-09): CI published npm `latest` with provenance and the GitHub release with notes and the MCPB. The MCP Registry entry `io.github.DevCrabs-Inc/yandex-metrika-mcp` 1.0.0 was published from main by the MCP Registry workflow after the description was shortened to the 100-character limit.
+- [ ] Delete the `NPM_TOKEN` secret, revoke the token on npmjs.com and set the package to "Require two-factor authentication and disallow tokens".
 - [ ] Every version bump updates `.cursor-plugin/plugin.json`, `plugins/claude/.claude-plugin/plugin.json` and the pinned version in `plugins/claude/.mcp.json`; `test/unit/packaging.test.ts` fails otherwise.
 
 ## Listings after the release
 
 Checked on 2026-11-09. All need the public repository and the package on npm.
 
-- [ ] Official MCP Registry: published by `release.yml`. Check `https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.DevCrabs-Inc/yandex-metrika-mcp`.
+- [x] Official MCP Registry: published by `release.yml`. Check `https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.DevCrabs-Inc/yandex-metrika-mcp`.
 - [ ] Glama: `glama.json` is in the repo; use "Add Server" on glama.ai/mcp/servers, then set the Dockerfile there to get a score badge.
 - [ ] punkpeye/awesome-mcp-servers: PR to the Marketing section with the Glama badge.
 - [ ] mcpservers.org, mcp.so, mcpmarket.com: free submission forms.
