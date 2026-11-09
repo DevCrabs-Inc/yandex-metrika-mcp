@@ -1,7 +1,7 @@
 {
   "name": "yandex-metrika",
   "displayName": "Yandex Metrika",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0",
   "description": "Read-only Yandex Metrika (Яндекс Метрика) analytics for AI assistants: verifiable reports, period comparisons, time series and CSV/JSON exports. Sign in with Yandex in the browser; no API key.",
   "author": {
     "name": "DevCrabs",

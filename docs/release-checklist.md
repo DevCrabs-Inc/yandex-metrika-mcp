@@ -42,7 +42,9 @@ Status of the release gates G0–G3 defined in [requirements.md](requirements.md
 - [ ] First publish: a granular access token with read and write access to the org's packages, saved as the repository secret `NPM_TOKEN`. The release job runs on Node 26 and publishes the packed tarball with `npm publish`.
 - [ ] After the first release: npmjs.com → the package → Settings → Trusted publishing → GitHub Actions, organisation `DevCrabs-Inc`, repository `yandex-metrika-mcp`, workflow `release.yml`. Then delete the `NPM_TOKEN` secret and set Publishing access to "Require two-factor authentication and disallow tokens". Trusted publishing is configured per package, so it needs the package to exist.
 - [ ] Provenance: npm generates it only from public repositories; the release job turns it on automatically once the repository is public. Enable private vulnerability reporting, which SECURITY.md points to.
-- [ ] Tag `v1.0.0-beta.1`; the release workflow publishes npm, the MCPB and the MCP Registry entry.
+- [x] `1.0.0-beta.1` published to npm by hand with 2FA (2026-11-09) for the live sign-in check; CI could not publish because the account requires 2FA.
+- [ ] Configure trusted publishing for the package, then delete the `NPM_TOKEN` secret.
+- [ ] Tag `v1.0.0`; the release workflow publishes npm, the GitHub release with notes from this changelog, the MCPB and the MCP Registry entry.
 - [ ] Every version bump updates `.cursor-plugin/plugin.json`, `plugins/claude/.claude-plugin/plugin.json` and the pinned version in `plugins/claude/.mcp.json`; `test/unit/packaging.test.ts` fails otherwise.
 
 ## Listings after the release

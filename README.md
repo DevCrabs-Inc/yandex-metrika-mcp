@@ -6,7 +6,7 @@ Read-only MCP server for **Yandex Metrika** (Yandex Metrica, Яндекс Мет
 
 **Документация на русском: [README.ru.md](README.ru.md) и [docs/ru](docs/ru/README.md).**
 
-> Status: **1.0.0-beta.1**. All v1 features are implemented and covered by tests against synthetic data and a simulated API. Live reconciliation with the Yandex Metrika interface and the client compatibility matrix are still in progress; see [docs/release-checklist.md](docs/release-checklist.md).
+> Status: **1.0.0**, the first stable release; tool names, arguments and outputs follow semantic versioning. Covered by tests against synthetic data and a simulated API, and checked with a live Yandex sign-in and reports on macOS. Other clients and platforms are tracked in [docs/release-checklist.md](docs/release-checklist.md).
 
 ## Why this server
 

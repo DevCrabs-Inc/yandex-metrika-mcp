@@ -72,6 +72,11 @@ describe("release metadata", () => {
     expect(existsSync(new URL("../../assets/logo-512.png", import.meta.url))).toBe(true);
   });
 
+  it("has a changelog section for the release notes of this version", () => {
+    // release.yml builds the GitHub release body from this section and fails without it.
+    expect(read("CHANGELOG.md").split("\n")).toContain(`## ${pkg.version}`);
+  });
+
   it("ships no client secret", () => {
     const sources = ["src/config/oauth-app.ts", "src/infra/auth/oauth.ts"].map(read).join("\n");
     expect(sources).not.toMatch(/client_secret\s*[:=]/);

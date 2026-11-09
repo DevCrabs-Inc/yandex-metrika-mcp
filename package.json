@@ -1,6 +1,6 @@
 {
   "name": "@dev-crabs/yandex-metrika-mcp",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0",
   "description": "Read-only MCP server for Yandex Metrika (Яндекс Метрика): verifiable reports, period comparisons, time series and CSV/JSON exports with explicit data quality.",
   "keywords": [
     "mcp",

@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.0.0-beta.1
+## 1.0.0
 
-First public beta with the full v1 scope.
+First stable release. Tool names, arguments and output fields follow semantic versioning from here on.
 
 - 13 read-only tools: status, connect, disconnect, list/describe counters, catalog, report, period comparison, time series, export, job status, cancel, artifact reading; 3 prompts.
 - Browser sign-in through the DevCrabs OAuth app in Yandex ID: read-only `metrika:read`, PKCE, a local one-time page, no OAuth app of your own and no token in the chat. `YM_MCP_CLIENT_ID` selects your own app; tokens can also be imported from the CLI or passed in `YANDEX_METRIKA_TOKEN` for headless setups.
@@ -18,3 +18,7 @@ First public beta with the full v1 scope.
 - Durable CSV/JSON exports: checkpoints with checksums, drift detection, resume after restart, atomic publication, manifest, Excel-safe CSV, exact big integers.
 - CLI: `setup` for Claude Desktop, Claude Code, Cursor, VS Code, Windsurf and Codex; `auth`, `jobs`, `doctor`, `demo`.
 - Packaging: npm package `@dev-crabs/yandex-metrika-mcp`, MCPB bundle, Dockerfile, MCP Registry metadata, Cursor and Claude plugin manifests, `llms-install.md` for AI agents.
+
+## 1.0.0-beta.1
+
+Published to npm only, for the live sign-in check. Same code as 1.0.0.
