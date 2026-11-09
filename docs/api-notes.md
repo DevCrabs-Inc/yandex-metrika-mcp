@@ -18,6 +18,7 @@ What the implementation relies on, and how well each point is verified. Re-check
 | bytime: `group` values, `top_keys` default 7 / max 30, nested `metrics`/`totals` arrays, **no time axis in the response**                                                                                                                      | Reports API `bytime`              |
 | Filter operators `==`, `!=`, `=@`, `!@`, `=~`, `!~`, `=*`, `!*`, `=.`, `!.`; `AND`/`OR`/`NOT`; `'` and `\` escaped with `\`; ≤20 conditions                                                                                                    | Segmentation docs                 |
 | Goals response root `goals[]` with `id`, `name`, `type`                                                                                                                                                                                        | Management goals                  |
+| Live sign-in with the DevCrabs app (2026-11-09): Yandex redirected to `http://127.0.0.1:<port>/callback`, and the PKCE code exchange without `client_secret` returned a working token                                                          | Manual G0 check through Codex CLI |
 
 ## Implemented from working code, not yet re-verified in docs
 
@@ -33,6 +34,5 @@ What the implementation relies on, and how well each point is verified. Re-check
 - Whether bytime week buckets follow ISO weeks or 7-day chunks from `date1`: weekly series must start on a Monday, where both agree.
 - Whether `=.()` list syntax is valid: lists are compiled to `OR`/`AND` of single conditions.
 - Whether a public client can refresh without a secret: refresh is attempted once; failure means signing in again. The Yandex ID refresh page (`tokens/refresh-client`, read 2026-11-09) lists only `grant_type` and `refresh_token` as required and `client_id` / `client_secret` as additional parameters; it says nothing about apps without a secret.
-- Loopback redirects at sign-in time. The docs (`register-auth`, `codes/code-url`, read 2026-11-09) only say that several Redirect URIs can be registered and that matching is exact on scheme, host, port and path. The registration form of a "for user authorization" app accepted `http://127.0.0.1:47613/callback`, `:47614/callback` and `:47615/callback` (2026-11-09); a live sign-in still has to confirm the redirect.
 - Metrika permissions offered in the registration form (2026-11-09): `metrika:read`, `metrika:write`, `metrika:offline_data`, `metrika:expenses`, `metrika:user_params`, `metrika:segments`. The DevCrabs app requests only `metrika:read`.
 - Moderation: the `unauthorized_client` error means the app was rejected by moderation or is still waiting for it (`codes/code-url`). How long moderation takes and whether it applies to this app type is not stated.

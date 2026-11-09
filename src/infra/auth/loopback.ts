@@ -51,7 +51,10 @@ export interface LoopbackOptions {
 const SECURITY_HEADERS = {
   "Content-Security-Policy":
     "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
-  "Referrer-Policy": "no-referrer",
+  // same-origin, not no-referrer: with no-referrer browsers send `Origin: null` on the
+  // counter form POST, which the cross-site check must then reject. Cross-origin
+  // requests (to Yandex) still get no referrer.
+  "Referrer-Policy": "same-origin",
   "Cache-Control": "no-store",
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
@@ -284,12 +287,7 @@ export class LoopbackAuthServer {
     res: ServerResponse,
     attempt: LoginAttempt,
   ): Promise<void> {
-    const origin = req.headers.origin;
-    if (
-      origin !== undefined &&
-      origin !== `http://127.0.0.1:${this._port}` &&
-      origin !== `http://localhost:${this._port}`
-    ) {
+    if (!isSameOriginPost(req, this._port)) {
       return this._send(
         res,
         403,
@@ -309,6 +307,18 @@ export class LoopbackAuthServer {
     attempt.status = "completed";
     return this._send(res, 200, donePage(attempt.connectionId ?? "", chosen.length));
   }
+}
+
+/**
+ * Accepts the counter form only from our own page. Browsers send our origin, or
+ * `Origin: null` with `Sec-Fetch-Site: same-origin` under a strict referrer policy;
+ * clients without either header are not browsers and still need the CSRF token.
+ */
+function isSameOriginPost(req: IncomingMessage, port: number | null): boolean {
+  const origin = req.headers.origin;
+  if (origin === undefined) return true;
+  if (origin === `http://127.0.0.1:${port}` || origin === `http://localhost:${port}`) return true;
+  return origin === "null" && req.headers["sec-fetch-site"] === "same-origin";
 }
 
 function readBody(req: IncomingMessage): Promise<string | null> {

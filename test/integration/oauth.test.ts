@@ -20,7 +20,13 @@ interface Reply {
 
 function http(
   url: string,
-  options: { method?: string; body?: string; host?: string; origin?: string } = {},
+  options: {
+    method?: string;
+    body?: string;
+    host?: string;
+    origin?: string;
+    fetchSite?: string;
+  } = {},
 ): Promise<Reply> {
   const target = new URL(url);
   return new Promise((resolve, reject) => {
@@ -33,6 +39,7 @@ function http(
         headers: {
           Host: options.host ?? target.host,
           ...(options.origin ? { Origin: options.origin } : {}),
+          ...(options.fetchSite ? { "Sec-Fetch-Site": options.fetchSite } : {}),
           ...(options.body ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
         },
       },
@@ -131,9 +138,23 @@ describe("browser sign-in (UX-02, T17)", () => {
       origin: "https://evil.example",
     });
     expect(crossSite.status).toBe(403);
+    // An opaque origin is accepted only when the browser itself marks the request
+    // as same-origin; a cross-site form cannot set Sec-Fetch-Site.
+    const opaqueCrossSite = await http(`${base}/select/${handle}`, {
+      method: "POST",
+      body: `csrf=${csrf}&counter=12345678`,
+      origin: "null",
+      fetchSite: "cross-site",
+    });
+    expect(opaqueCrossSite.status).toBe(403);
+    // Pages must not use no-referrer: browsers then send `Origin: null` on our own
+    // form POST, which broke counter selection in a real sign-in (G0, 2026-11-09).
+    expect(select.headers["referrer-policy"]).toBe("same-origin");
     const done = await http(`${base}/select/${handle}`, {
       method: "POST",
       body: `csrf=${csrf}&counter=12345678`,
+      origin: "null",
+      fetchSite: "same-origin",
     });
     expect(done.status).toBe(200);
 
