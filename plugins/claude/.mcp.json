@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "yandex-metrika": {
+      "command": "npx",
+      "args": ["-y", "@dev-crabs/yandex-metrika-mcp@1.0.0-beta.1"]
+    }
+  }
+}

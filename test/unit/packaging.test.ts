@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import pkg from "../../package.json" with { type: "json" };
 import { TOOL_NAMES } from "../../src/mcp/tools.ts";
@@ -43,6 +43,33 @@ describe("release metadata", () => {
       const mentioned = read(path).match(/\bmetrika_[a-z_]+\b/g) ?? [];
       for (const name of mentioned) expect(registered.has(name), `${path}: ${name}`).toBe(true);
     }
+  });
+
+  it("keeps directory and plugin manifests in step with package.json", () => {
+    const rootMcp = JSON.parse(read(".mcp.json"));
+    expect(rootMcp.mcpServers["yandex-metrika"].args).toEqual(["-y", pkg.name]);
+
+    const cursor = JSON.parse(read(".cursor-plugin/plugin.json"));
+    expect(cursor.version).toBe(pkg.version);
+    expect(existsSync(new URL(`../../${cursor.logo}`, import.meta.url))).toBe(true);
+    expect(existsSync(new URL(`../../${cursor.mcpServers}`, import.meta.url))).toBe(true);
+
+    // The Claude directory blocks launchers that are not pinned to an exact version.
+    const claude = JSON.parse(read("plugins/claude/.claude-plugin/plugin.json"));
+    expect(claude.version).toBe(pkg.version);
+    const claudeMcp = JSON.parse(read("plugins/claude/.mcp.json"));
+    expect(claudeMcp.mcpServers["yandex-metrika"].args).toEqual([
+      "-y",
+      `${pkg.name}@${pkg.version}`,
+    ]);
+    expect(read("plugins/claude/README.md").split(/\s+/).length).toBeGreaterThanOrEqual(40);
+
+    const glama = JSON.parse(read("glama.json"));
+    expect(glama.maintainers.length).toBeGreaterThan(0);
+
+    const manifest = JSON.parse(read("packaging/mcpb/manifest.template.json"));
+    expect(manifest.icon).toBe("icon.png");
+    expect(existsSync(new URL("../../assets/logo-512.png", import.meta.url))).toBe(true);
   });
 
   it("ships no client secret", () => {

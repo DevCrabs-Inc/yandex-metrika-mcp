@@ -1,0 +1,22 @@
+{
+  "name": "yandex-metrika",
+  "version": "1.0.0-beta.1",
+  "description": "Read-only Yandex Metrika (Яндекс Метрика) analytics for AI assistants: verifiable reports, period comparisons, time series and CSV/JSON exports. Sign in with Yandex in the browser; no API key.",
+  "author": {
+    "name": "DevCrabs"
+  },
+  "homepage": "https://github.com/DevCrabs-Inc/yandex-metrika-mcp#readme",
+  "repository": "https://github.com/DevCrabs-Inc/yandex-metrika-mcp",
+  "license": "MIT",
+  "keywords": [
+    "yandex-metrika",
+    "yandex-metrica",
+    "analytics",
+    "web-analytics",
+    "seo",
+    "utm",
+    "яндекс-метрика"
+  ],
+  "logo": "assets/logo-512.png",
+  "mcpServers": ".mcp.json"
+}

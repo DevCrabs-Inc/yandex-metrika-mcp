@@ -21,6 +21,7 @@ const platforms = [
 rmSync(stage, { recursive: true, force: true });
 mkdirSync(join(stage, "dist"), { recursive: true });
 cpSync(join(root, "dist", "cli.js"), join(stage, "dist", "cli.js"));
+cpSync(join(root, "assets", "logo-512.png"), join(stage, "icon.png"));
 for (const file of ["README.md", "README.ru.md", "LICENSE"])
   cpSync(join(root, file), join(stage, file));
 writeFileSync(

@@ -12,6 +12,7 @@
   "documentation": "https://github.com/DevCrabs-Inc/yandex-metrika-mcp/blob/main/docs/ru/README.md",
   "support": "https://github.com/DevCrabs-Inc/yandex-metrika-mcp/issues",
   "license": "MIT",
+  "icon": "icon.png",
   "keywords": [
     "mcp",
     "yandex",

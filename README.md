@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/logo-512.png" width="160" alt="Yandex Metrika MCP logo: a crab holding a chart"></p>
+
 # Yandex Metrika MCP
 
 Read-only MCP server for **Yandex Metrika** (Yandex Metrica, Яндекс Метрика). Connect it to Claude, Cursor, VS Code, Codex or any MCP client and ask about traffic, sources, landing pages and goals. Every answer comes with exact dates, the counter time zone, sampling status, filters and provenance, so the numbers can be checked.

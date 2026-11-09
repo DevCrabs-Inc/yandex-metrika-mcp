@@ -43,4 +43,19 @@ Status of the release gates G0–G3 defined in [requirements.md](requirements.md
 - [ ] After the first release: npmjs.com → the package → Settings → Trusted publishing → GitHub Actions, organisation `DevCrabs-Inc`, repository `yandex-metrika-mcp`, workflow `release.yml`. Then delete the `NPM_TOKEN` secret and set Publishing access to "Require two-factor authentication and disallow tokens". Trusted publishing is configured per package, so it needs the package to exist.
 - [ ] Provenance: npm generates it only from public repositories; the release job turns it on automatically once the repository is public. Enable private vulnerability reporting, which SECURITY.md points to.
 - [ ] Tag `v1.0.0-beta.1`; the release workflow publishes npm, the MCPB and the MCP Registry entry.
-- [ ] Submissions to directories (Claude extensions, Smithery, Glama, PulseMCP, mcp.so, awesome lists) happen with the marketing work.
+- [ ] Every version bump updates `.cursor-plugin/plugin.json`, `plugins/claude/.claude-plugin/plugin.json` and the pinned version in `plugins/claude/.mcp.json`; `test/unit/packaging.test.ts` fails otherwise.
+
+## Listings after the release
+
+Checked on 2026-11-09. All need the public repository and the package on npm.
+
+- [ ] Official MCP Registry: published by `release.yml`. Check `https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.DevCrabs-Inc/yandex-metrika-mcp`.
+- [ ] Glama: `glama.json` is in the repo; use "Add Server" on glama.ai/mcp/servers, then set the Dockerfile there to get a score badge.
+- [ ] punkpeye/awesome-mcp-servers: PR to the Marketing section with the Glama badge.
+- [ ] mcpservers.org, mcp.so, mcpmarket.com: free submission forms.
+- [ ] GitHub MCP Registry: email partnerships@github.com once the server is in the official registry.
+- [ ] cursor.directory: paste the repo URL; it reads `.mcp.json`.
+- [ ] Cursor Marketplace: submit the repo at cursor.com/marketplace/publish (`.cursor-plugin/plugin.json`).
+- [ ] Cline MCP Marketplace: issue with `assets/logo-400.png`; Cline installs from README and `llms-install.md`.
+- [ ] Claude directory: submit the plugin in `plugins/claude` from a Pro or higher account at claude.ai/directory/manage (MCPB listings are no longer accepted; local servers run in Claude Code and Cowork, not in chat).
+- Later: Docker MCP Catalog (needs a tested `YANDEX_METRIKA_TOKEN` path in a container); remote-only directories (Claude connectors, ChatGPT) need remote mode (G4). Skip Smithery (closed to new connections since 2026-10-31) and PulseMCP until it reopens.
