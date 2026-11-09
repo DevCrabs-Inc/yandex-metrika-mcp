@@ -13,6 +13,7 @@ Status of the release gates from the product spec (G0–G3). An item is done onl
 - [x] Durable exports with checkpoints, drift handling, resume, cancel, atomic publish, manifest (T11, T12, T22, T26–T31).
 - [x] Setup wizard for six clients, `doctor`, `jobs`, `demo`.
 - [x] npm package metadata, MCPB build, Dockerfile, MCP Registry `server.json`, release workflow.
+- [x] CI installs the packed tarball, runs the stdio e2e tests against it and enforces a bundle size limit; actions and `mcp-publisher` are pinned and checksummed.
 - [x] Russian user docs, English quickstart, SECURITY, CONTRIBUTING, CHANGELOG.
 
 ## Needs people or accounts (blocks the public "production" claim)
@@ -37,7 +38,7 @@ Status of the release gates from the product spec (G0–G3). An item is done onl
 
 ## Publishing
 
-- [ ] Create the npm organisation `devcrabs`, add `NPM_TOKEN` to repository secrets (or configure trusted publishing).
-- [ ] Make the GitHub repository public; enable private vulnerability reporting.
+- [ ] Create the npm organisation `devcrabs` (on 2026-11-09 the registry answered `Scope not found` for it), add a granular `NPM_TOKEN` with write access to `@devcrabs` to repository secrets. Trusted publishing is an alternative for later: it is set in the package settings on npmjs.com, needs npm CLI 11.5.1 or later (Node 22 ships npm 10) and `npm publish`; the npm docs do not say whether the first publish may use it.
+- [ ] Make the GitHub repository public before the first tag: npm documents provenance for public source repositories, and the release workflow publishes with `--provenance`. Enable private vulnerability reporting, which SECURITY.md points to.
 - [ ] Tag `v1.0.0-beta.1`; the release workflow publishes npm, the MCPB and the MCP Registry entry.
 - [ ] Submissions to directories (Claude extensions, Smithery, Glama, PulseMCP, mcp.so, awesome lists) happen with the marketing work.

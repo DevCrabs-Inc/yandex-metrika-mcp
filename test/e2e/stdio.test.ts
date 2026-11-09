@@ -4,7 +4,10 @@ import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import { describe, expect, it } from "vitest";
 import { tempDir } from "../helpers.ts";
 
-const entry = fileURLToPath(new URL("../../src/cli/index.ts", import.meta.url));
+// YM_MCP_E2E_BIN runs the same checks against an installed package (CI: the packed
+// tarball) instead of the sources.
+const entry =
+  process.env["YM_MCP_E2E_BIN"] ?? fileURLToPath(new URL("../../src/cli/index.ts", import.meta.url));
 
 describe("stdio server (T16)", () => {
   it("starts without any token and keeps stdout for protocol messages only", async () => {
