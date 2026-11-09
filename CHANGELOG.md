@@ -9,6 +9,7 @@
 - Text summaries of reports, comparisons and time series show the filters and why rows were cut (page limit, response budget or top segments only), and comparisons say how many segments are only in structured content.
 - Tool descriptions lead with what the tool does in Yandex Metrika, so client-side tool search finds them; analytics tools say that calls spend API quota. Server instructions ask the model to say which rows or pages were not fetched.
 - The `tool call` log line on stderr records response and text sizes, returned rows, truncation and the MCP client name and version; labels and counter IDs are still never logged. The User-Agent sent to Yandex names the MCP client, e.g. `yandex-metrika-mcp/1.0.0 (claude-code/2.1.0)`.
+- The Excel-safe CSV BOM is written as an escape in the source instead of a literal invisible character (no change in output).
 - Tool arguments are validated strictly: a misspelled argument, also inside `period` or `filters`, is rejected instead of being ignored.
 
 ## 1.0.0-beta.1

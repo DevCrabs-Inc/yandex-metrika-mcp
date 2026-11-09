@@ -260,7 +260,7 @@ describe("exports (EXP-01, EXP-02)", () => {
       c.exports.get(connectionId, csv.job_id).artifacts[0]?.file_path ?? "",
       "utf8",
     );
-    expect(csvFile.startsWith("﻿")).toBe(true);
+    expect(csvFile.startsWith("\ufeff")).toBe(true);
     expect(csvFile).toMatch(/"'=HYPERLINK\(""http:\/\/evil.example"",""x""\)"/);
     const js = await c.exports.create({ ...base(connectionId, "key-json-01"), format: "json" });
     await c.exports.settle(js.job_id);

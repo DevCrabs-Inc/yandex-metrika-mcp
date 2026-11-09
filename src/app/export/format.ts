@@ -16,7 +16,7 @@ export function csvHeader(spec: ExportSpec): string {
     ...spec.dimensions.flatMap((d) => [d.id, `${d.id}:id`]),
     ...spec.metrics.map((m) => m.id),
   ];
-  return `${excelSafe ? "﻿" : ""}${columns.map((c) => csvCell(c, false)).join(",")}\r\n`;
+  return `${excelSafe ? "\ufeff" : ""}${columns.map((c) => csvCell(c, false)).join(",")}\r\n`;
 }
 
 export function csvRow(spec: ExportSpec, row: PartRow): string {
