@@ -125,6 +125,7 @@ export class TimeseriesService {
         metrics: fields.metrics,
         hasDimensions,
         labelsRedacted: series.some((s) => s.dims.redacted),
+        labelsSanitized: series.some((s) => s.dims.sanitized),
       }),
     ];
     if (buckets.some((b) => b.partial)) {

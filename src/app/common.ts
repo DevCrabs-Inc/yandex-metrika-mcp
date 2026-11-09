@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { CATALOG_VERSION } from "../domain/catalog.ts";
+import { safeLabel } from "../domain/privacy.ts";
 import type { Warning } from "../domain/warnings.ts";
 import { CLOSED_REPORT_TTL_SECONDS, OPEN_REPORT_TTL_SECONDS } from "./cached-source.ts";
 import type { Connection } from "./connections.ts";
-import type { CacheMode, FetchOptions, SourceResponse } from "./ports.ts";
+import type { CacheMode, CounterInfo, FetchOptions, GoalInfo, SourceResponse } from "./ports.ts";
 
 export const MAX_RESPONSE_BYTES = 48 * 1024;
 /** Space kept for the short text summary that accompanies structured content. */
@@ -14,6 +15,15 @@ export const newRequestId = (): string => `req_${randomUUID().replace(/-/g, "").
 
 export const jsonBytes = (value: unknown): number =>
   Buffer.byteLength(JSON.stringify(value), "utf8");
+
+// Counter and goal names are set by whoever owns the counter: treat them like any other label.
+export const safeCounter = (c: CounterInfo): CounterInfo => ({
+  ...c,
+  name: safeLabel(c.name).name ?? "",
+  site: safeLabel(c.site).name ?? "",
+});
+
+export const safeGoal = (g: GoalInfo): GoalInfo => ({ ...g, name: safeLabel(g.name).name ?? "" });
 
 export interface Provenance {
   readonly source: "demo" | "yandex";

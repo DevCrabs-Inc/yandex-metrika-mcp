@@ -17,6 +17,7 @@ import type {
 } from "../domain/periods.ts";
 import { expandPreset, MAX_DIMENSIONS, MAX_METRICS, type ReportPreset } from "../domain/presets.ts";
 import type { Accuracy } from "../domain/quality.ts";
+import { safeCounter, safeGoal } from "./common.ts";
 import type { Connection } from "./connections.ts";
 import type { Clock, CounterInfo, GoalInfo } from "./ports.ts";
 
@@ -40,7 +41,7 @@ export async function loadCounterContext(
       { nextAction: "Call metrika_list_counters to see allowed counters." },
     );
   }
-  const counter = await connection.source.getCounter(counterId);
+  const counter = safeCounter(await connection.source.getCounter(counterId));
   if (counter.time_zone === null || !isValidTimeZone(counter.time_zone)) {
     throw new DomainError(
       "TIMEZONE_UNKNOWN",
@@ -48,7 +49,7 @@ export async function loadCounterContext(
       { nextAction: "Set the counter time zone in Yandex Metrika settings and try again." },
     );
   }
-  const goals = await connection.source.listGoals(counterId);
+  const goals = (await connection.source.listGoals(counterId)).map(safeGoal);
   return {
     counter,
     goals,

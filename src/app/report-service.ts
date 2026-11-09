@@ -108,6 +108,7 @@ export class ReportService {
       values: row.metrics,
     }));
     const labelsRedacted = normalized.some((r) => r.dims.redacted);
+    const labelsSanitized = normalized.some((r) => r.dims.sanitized);
     const totals = totalsRecord(fields.metrics, upstream.totals);
 
     const build = (rowCount: number, truncationReason: TruncationReason | null): ReportOutput => {
@@ -160,7 +161,12 @@ export class ReportService {
           ...staleWarnings([raw], clock.now()),
           ...(approximated ? [precisionWarning] : []),
           ...samplingWarnings,
-          ...qualityWarnings(quality, { metrics: fields.metrics, hasDimensions, labelsRedacted }),
+          ...qualityWarnings(quality, {
+            metrics: fields.metrics,
+            hasDimensions,
+            labelsRedacted,
+            labelsSanitized,
+          }),
         ],
         next_cursor: moreRows ? encodeCursor(binding, nextOffset, cursorKey, clock.now()) : null,
       };

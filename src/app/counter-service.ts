@@ -4,19 +4,12 @@ import { decodeCursor, encodeCursor } from "../domain/cursor.ts";
 import { isValidTimeZone } from "../domain/dates.ts";
 import { DomainError } from "../domain/errors.ts";
 import { fingerprint } from "../domain/fingerprint.ts";
-import { safeLabel } from "../domain/privacy.ts";
 import type { Warning } from "../domain/warnings.ts";
-import { demoWarning, provenance } from "./common.ts";
+import { demoWarning, provenance, safeCounter, safeGoal } from "./common.ts";
 import type { ConnectionResolver } from "./connections.ts";
-import type { Clock, CounterInfo } from "./ports.ts";
+import type { Clock } from "./ports.ts";
 
 export const COUNTERS_PAGE_SIZE = 50;
-
-const safeCounter = (c: CounterInfo): CounterInfo => ({
-  ...c,
-  name: safeLabel(c.name).name ?? "",
-  site: safeLabel(c.site).name ?? "",
-});
 
 export interface CounterServiceDeps {
   readonly connections: ConnectionResolver;
@@ -101,7 +94,9 @@ export class CounterService {
       );
     }
     const counter = safeCounter(await connection.source.getCounter(input.counter_id));
-    const goals = await connection.source.listGoals(input.counter_id);
+    // Duplicates are counted after sanitizing: names that differ only by invisible
+    // characters look identical to the user and must be flagged.
+    const goals = (await connection.source.listGoals(input.counter_id)).map(safeGoal);
     const nameCounts = new Map<string, number>();
     for (const goal of goals) nameCounts.set(goal.name, (nameCounts.get(goal.name) ?? 0) + 1);
     const warnings: Warning[] = [...demoWarning(connection)];
@@ -137,7 +132,7 @@ export class CounterService {
       counter,
       goals: goals.map((g) => ({
         id: g.id,
-        name: safeLabel(g.name).name ?? "",
+        name: g.name,
         type: g.type,
         duplicate_name: (nameCounts.get(g.name) ?? 0) > 1,
       })),

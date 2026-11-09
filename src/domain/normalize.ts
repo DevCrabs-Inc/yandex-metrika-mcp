@@ -19,6 +19,8 @@ export interface NormalizedDimensions {
   readonly key: string;
   readonly cells: readonly DimensionCell[];
   readonly redacted: boolean;
+  /** Some label lost control or invisible characters. */
+  readonly sanitized: boolean;
 }
 
 export function normalizeDimensions(
@@ -29,12 +31,14 @@ export function normalizeDimensions(
     name: v.name ?? null,
   }));
   let redacted = false;
+  let sanitized = false;
   const cells = raw.map((value): DimensionCell => {
     const name = safeLabel(value.name);
     const id = safeLabel(value.id);
     const cellRedacted = name.redacted || id.redacted;
     const cellTruncated = name.truncated || id.truncated;
     redacted ||= cellRedacted;
+    sanitized ||= name.sanitized || id.sanitized;
     return {
       id: id.name,
       name: name.name,
@@ -42,7 +46,7 @@ export function normalizeDimensions(
       ...(cellTruncated ? { truncated: true as const } : {}),
     };
   });
-  return { key: rowKey(raw), cells, redacted };
+  return { key: rowKey(raw), cells, redacted, sanitized };
 }
 
 export function metricColumns(metrics: readonly MetricDefinition[]) {
@@ -117,6 +121,7 @@ export function qualityWarnings(
     readonly metrics: readonly MetricDefinition[];
     readonly hasDimensions: boolean;
     readonly labelsRedacted: boolean;
+    readonly labelsSanitized?: boolean;
   },
 ): Warning[] {
   const warnings: Warning[] = [];
@@ -150,6 +155,15 @@ export function qualityWarnings(
       code: "LABELS_REDACTED",
       severity: "info",
       message: "Query strings and fragments were removed from URL labels (safe privacy mode).",
+      affected_fields: [],
+    });
+  }
+  if (context.labelsSanitized) {
+    warnings.push({
+      code: "LABELS_SANITIZED",
+      severity: "info",
+      message:
+        "Control or invisible characters were removed from labels; such characters can hide text or instructions.",
       affected_fields: [],
     });
   }

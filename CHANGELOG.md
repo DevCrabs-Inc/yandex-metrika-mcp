@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Labels, counter names, goal names and connection aliases lose control and invisible characters (bidi controls, zero-width characters, Unicode tags); results say so with `LABELS_SANITIZED`. Report context no longer bypasses label sanitizing, truncation never splits an emoji, and goal names that look identical after sanitizing are flagged as duplicates.
 - Tool arguments are validated strictly: a misspelled argument, also inside `period` or `filters`, is rejected instead of being ignored.
 
 ## 1.0.0-beta.1

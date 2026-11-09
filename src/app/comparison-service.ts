@@ -39,6 +39,12 @@ import {
 /** Segment rows fetched per period to build the union of keys. */
 export const COMPARISON_FETCH_ROWS = 100;
 const SMALL_VOLUME_VISITS = 100;
+// Per-period quality warnings that still apply to the comparison as a whole.
+const LABEL_AND_AGGREGATION_WARNINGS: ReadonlySet<string> = new Set([
+  "NON_ADDITIVE_METRICS",
+  "LABELS_REDACTED",
+  "LABELS_SANITIZED",
+]);
 
 interface PeriodData {
   readonly response: SourceResponse;
@@ -53,6 +59,7 @@ interface PeriodData {
   readonly sampling: SamplingReading;
   readonly warnings: readonly Warning[];
   readonly labelsRedacted: boolean;
+  readonly labelsSanitized: boolean;
   readonly attribution: string | null;
 }
 
@@ -125,7 +132,8 @@ export class ComparisonService {
         metrics,
         hasDimensions,
         labelsRedacted: baseline.labelsRedacted || current.labelsRedacted,
-      }).filter((w) => w.code === "NON_ADDITIVE_METRICS" || w.code === "LABELS_REDACTED"),
+        labelsSanitized: baseline.labelsSanitized || current.labelsSanitized,
+      }).filter((w) => LABEL_AND_AGGREGATION_WARNINGS.has(w.code)),
       ...this._extraWarnings(
         metrics,
         baseline,
@@ -233,10 +241,12 @@ export class ComparisonService {
       { cells: readonly DimensionCell[]; values: readonly (number | null)[] }
     >();
     let labelsRedacted = false;
+    let labelsSanitized = false;
     if (hasDimensions) {
       for (const row of upstream.data) {
         const dims = normalizeDimensions(row.dimensions);
         labelsRedacted ||= dims.redacted;
+        labelsSanitized ||= dims.sanitized;
         rows.set(dims.key, { cells: dims.cells, values: row.metrics });
       }
     }
@@ -256,6 +266,7 @@ export class ComparisonService {
       sampling,
       warnings,
       labelsRedacted,
+      labelsSanitized,
       attribution: upstream.query?.attribution ?? null,
     };
   }

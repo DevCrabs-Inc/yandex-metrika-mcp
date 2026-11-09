@@ -32,6 +32,21 @@ export function toErrorOutput(error: unknown): ErrorOutput {
 }
 
 /**
+ * Replaces lone UTF-16 surrogates in every string. Some clients reject the whole
+ * message, and drop the transport, when a result contains half of a surrogate pair.
+ */
+export function wellFormedDeep<T>(value: T): T {
+  if (typeof value === "string") return value.toWellFormed() as T;
+  if (Array.isArray(value)) return value.map(wellFormedDeep) as T;
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k.toWellFormed(), wellFormedDeep(v)]),
+    ) as T;
+  }
+  return value;
+}
+
+/**
  * Runs a tool body and maps the outcome onto the MCP result envelope: domain
  * failures become `isError` results with a typed code, never protocol errors.
  */
@@ -43,13 +58,16 @@ export async function runTool<T extends Record<string, unknown>>(
 ): Promise<CallToolResult> {
   const started = performance.now();
   try {
-    const output = await body();
+    const output = wellFormedDeep(await body());
     logger.info("tool call", {
       tool,
       status: "ok",
       latency_ms: Math.round(performance.now() - started),
     });
-    return { content: [{ type: "text", text: render(output) }], structuredContent: output };
+    return {
+      content: [{ type: "text", text: render(output).toWellFormed() }],
+      structuredContent: output,
+    };
   } catch (error) {
     const output = toErrorOutput(error);
     const fields = {

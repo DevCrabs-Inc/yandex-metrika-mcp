@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { DomainError } from "../domain/errors.ts";
+import { safeLabel } from "../domain/privacy.ts";
 import { CachedSource } from "./cached-source.ts";
 import { type Connection, type ConnectionResolver, unknownConnection } from "./connections.ts";
 import type { Clock, CounterInfo, MetrikaSource, SecretStore, TokenProvider } from "./ports.ts";
@@ -134,6 +135,8 @@ export class ConnectionService implements ConnectionResolver {
     },
   ): Promise<{ connectionId: string; counters: readonly CounterInfo[] }> {
     const { clock, store } = this._deps;
+    // The alias can come from a tool argument, so it is stored like any other label.
+    const alias = safeLabel(options.alias).name;
     let counters: readonly CounterInfo[] = [];
     if (options.validate) {
       const probe = this._deps.makeSource("probe", {
@@ -158,7 +161,7 @@ export class ConnectionService implements ConnectionResolver {
           state: "active",
           generation,
           token_expires_at: tokens.expires_at,
-          ...(options.alias ? { alias: options.alias } : {}),
+          ...(alias ? { alias } : {}),
         },
         now,
       );
@@ -170,7 +173,7 @@ export class ConnectionService implements ConnectionResolver {
     await secrets.set(secretKey(id, 1), JSON.stringify(tokens));
     store.insertConnection({
       id,
-      alias: options.alias ?? `Yandex account ${store.listConnections().length + 1}`,
+      alias: alias ?? `Yandex account ${store.listConnections().length + 1}`,
       kind: options.kind,
       state: "active",
       generation: 1,

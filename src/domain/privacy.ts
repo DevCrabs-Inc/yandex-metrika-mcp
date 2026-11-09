@@ -6,10 +6,18 @@ export interface SafeLabel {
   readonly name: string | null;
   readonly redacted: boolean;
   readonly truncated: boolean;
+  /** Control or invisible characters were removed or replaced. */
+  readonly sanitized: boolean;
 }
 
 // biome-ignore lint/suspicious/noControlCharactersInRegex: stripping control characters is the point.
 const CONTROL = /[\u0000-\u001f\u007f-\u009f\u2028\u2029]+/g;
+// Invisible characters that can hide text from a person or smuggle instructions to a
+// model: soft hyphen, bidi marks, overrides and isolates, zero-width characters, word
+// joiners, BOM, interlinear annotations and Unicode tag characters. ZWJ (U+200D) and
+// variation selectors stay because emoji sequences need them.
+const INVISIBLE =
+  /[\u00ad\u061c\u180e\u200b\u200c\u200e\u200f\u202a-\u202e\u2060-\u2064\u2066-\u206f\ufeff\ufff9-\ufffb\u{e0000}-\u{e007f}]/gu;
 const URL_LIKE = /^[a-z][a-z0-9+.-]*:\/\//i;
 
 /**
@@ -19,9 +27,10 @@ const URL_LIKE = /^[a-z][a-z0-9+.-]*:\/\//i;
  */
 export function safeLabel(value: string | null | undefined): SafeLabel {
   if (value === null || value === undefined || value === "") {
-    return { name: null, redacted: false, truncated: false };
+    return { name: null, redacted: false, truncated: false, sanitized: false };
   }
-  let name = value.replace(CONTROL, " ");
+  let name = value.toWellFormed().replace(CONTROL, " ").replace(INVISIBLE, "");
+  const sanitized = name !== value;
   let redacted = false;
   if (URL_LIKE.test(name)) {
     try {
@@ -35,8 +44,15 @@ export function safeLabel(value: string | null | undefined): SafeLabel {
     }
   }
   const truncated = name.length > MAX_LABEL_LENGTH;
-  if (truncated) name = `${name.slice(0, MAX_LABEL_LENGTH - 1)}…`;
-  return { name, redacted, truncated };
+  if (truncated) name = `${cutAt(name, MAX_LABEL_LENGTH - 1)}…`;
+  return { name, redacted, truncated, sanitized };
+}
+
+/** Cuts to at most `length` UTF-16 units without leaving half of a surrogate pair. */
+function cutAt(text: string, length: number): string {
+  const last = text.charCodeAt(length - 1);
+  const splitsPair = last >= 0xd800 && last <= 0xdbff;
+  return text.slice(0, splitsPair ? length - 1 : length);
 }
 
 /** Stable row identity from dimension IDs and raw values, computed before redaction. */
