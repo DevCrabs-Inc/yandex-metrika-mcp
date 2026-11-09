@@ -10,7 +10,7 @@ Read-only Yandex Metrika MCP server in TypeScript. The product spec (in Russian)
 
 ## Stack
 
-- Node >= 22.13, ESM, TypeScript strict (`tsc --noEmit`), pnpm only.
+- Node >= 22.13 for users (engines), ESM, TypeScript strict (`tsc --noEmit`), pnpm only. CI tests Node 22, 24 and 26; development (`.nvmrc`), releases and the Docker image use Node 26, the current LTS.
 - `@modelcontextprotocol/server` v2 (spec 2026-07-28) and zod 4, bundled into `dist/cli.js`. The only runtime dependency is `@napi-rs/keyring` (native, kept external). Pin exact versions; adding a dependency needs approval.
 - Biome for lint and format, vitest for tests, tsdown for the single-file bundle, lefthook for git hooks.
 - Run source directly with Node type stripping: `node src/cli/index.ts`. Use only erasable TypeScript syntax (no enums, namespaces or parameter properties).
