@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import pkg from "../../package.json" with { type: "json" };
 import { TOOL_NAMES } from "../../src/mcp/tools.ts";
@@ -25,6 +25,23 @@ describe("release metadata", () => {
       identifier: pkg.name,
       version: pkg.version,
     });
+  });
+
+  it("documents every registered tool and no tool that does not exist", () => {
+    const registered = new Set<string>(TOOL_NAMES);
+    for (const path of ["README.md", "docs/ru/tools.md"]) {
+      const text = read(path);
+      for (const name of TOOL_NAMES) expect(text, `${path} misses ${name}`).toContain(name);
+    }
+    const docs = [
+      "README.md",
+      "README.ru.md",
+      ...readdirSync(new URL("../../docs/ru/", import.meta.url)).map((f) => `docs/ru/${f}`),
+    ];
+    for (const path of docs) {
+      const mentioned = read(path).match(/\bmetrika_[a-z_]+\b/g) ?? [];
+      for (const name of mentioned) expect(registered.has(name), `${path}: ${name}`).toBe(true);
+    }
   });
 
   it("ships no client secret", () => {

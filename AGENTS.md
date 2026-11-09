@@ -28,7 +28,7 @@ src/demo       synthetic data source shaped like Reporting API responses
 src/container.ts  composition root, the only place that wires implementations
 ```
 
-- `domain` imports nothing from `app`, `infra` or `mcp`. `mcp` holds no analytics math.
+- `domain` imports nothing from `app`, `infra` or `mcp`. `mcp` holds no analytics math. `test/contract/codebase.test.ts` enforces the import directions.
 - Analytics tools take `connection_id` and `counter_id` explicitly. There are no implicit defaults across calls.
 - Never add write endpoints of the Management API, a raw HTTP tool or an arbitrary `request(path)` escape hatch.
 
@@ -38,10 +38,19 @@ src/container.ts  composition root, the only place that wires implementations
 - Never put secrets in tool arguments, results, logs or errors. stdout is reserved for MCP messages; logs go to stderr through `src/infra/log/logger.ts`.
 - Unknown is not zero: keep `null` for unknown values, sampling and missing segments.
 - Never sum non-additive metrics (users) or average rates across rows; use API totals.
-- Labels from the API (URLs, UTM, titles) are untrusted data. Pass them through `safeLabel`.
+- Labels from the API (URLs, UTM, titles, counter and goal names) are untrusted data. Pass them through `safeLabel` before they leave `app`, and through `cell()`, `inline()` or `untrusted()` in `src/mcp/render.ts`.
+- Error candidates (`details.candidates`) come only from the catalog or from resources of the same connection, and are never applied automatically.
+- Never write invisible or bidi characters literally in code, tests or docs; use escapes such as `\u200b`.
 - Comments explain intent, not mechanics. No leftover `console.log`.
 - Code, comments, logs, commits, PRs and developer docs are in English. User documentation is in Russian (`README.ru.md`, `docs/ru/`), with an English quickstart in `README.md`.
 - Facts about the Yandex API go to `docs/api-notes.md` with their verification status.
+
+## MCP contract
+
+- `tools/list`, prompts and server instructions are a public API that clients cache and models learn. New input fields are optional. Renaming or removing a tool, an argument or an output field needs a major version and a CHANGELOG entry.
+- `test/contract/__toolsnaps__/` holds a snapshot of every tool. Update it with `pnpm test -u` and review the diff like code; CI fails on a missing or stale snapshot.
+- A description starts with what the tool does in Yandex Metrika, in the user's words.
+- Text output is a short summary, never the full JSON; `test/contract/text-parity.test.ts` lists what it must contain.
 
 ## After every change
 
