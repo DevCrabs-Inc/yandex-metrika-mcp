@@ -19,7 +19,7 @@ Read-only MCP server for **Yandex Metrika** (Yandex Metrica, Яндекс Мет
 Requires Node.js 22.13 or later.
 
 ```bash
-npx -y @devcrabs/yandex-metrika-mcp setup --client claude-desktop   # or cursor, vscode, windsurf, codex, claude-code
+npx -y @dev-crabs/yandex-metrika-mcp setup --client claude-desktop   # or cursor, vscode, windsurf, codex, claude-code
 ```
 
 Restart the client and ask: _"Connect Yandex Metrika and compare the last two weeks by traffic source."_ The assistant calls `metrika_connect` and gives you a local sign-in link.
@@ -29,7 +29,7 @@ Manual configuration for any client:
 ```json
 {
   "mcpServers": {
-    "yandex-metrika": { "command": "npx", "args": ["-y", "@devcrabs/yandex-metrika-mcp"] }
+    "yandex-metrika": { "command": "npx", "args": ["-y", "@dev-crabs/yandex-metrika-mcp"] }
   }
 }
 ```

@@ -10,16 +10,16 @@
 
 Код авторизации и токен не проходят через чат: их получает локальный процесс сервера. Токен сохраняется в системном хранилище паролей. В чат возвращается только `connection_id`.
 
-Из терминала то же самое делает команда `npx -y @devcrabs/yandex-metrika-mcp auth login --alias "Клиент А"`.
+Из терминала то же самое делает команда `npx -y @dev-crabs/yandex-metrika-mcp auth login --alias "Клиент А"`.
 
 ## Несколько аккаунтов
 
 У каждого входа свой `connection_id`. Каждый вызов инструмента явно указывает подключение и счётчик, поэтому данные разных аккаунтов не смешиваются. Даже если один счётчик доступен через два аккаунта, кэш, выгрузки и файлы у них раздельные.
 
 ```bash
-npx -y @devcrabs/yandex-metrika-mcp auth list
-npx -y @devcrabs/yandex-metrika-mcp auth allow conn_abc 12345678 87654321   # ограничить счётчики
-npx -y @devcrabs/yandex-metrika-mcp auth allow conn_abc                     # снять ограничение
+npx -y @dev-crabs/yandex-metrika-mcp auth list
+npx -y @dev-crabs/yandex-metrika-mcp auth allow conn_abc 12345678 87654321   # ограничить счётчики
+npx -y @dev-crabs/yandex-metrika-mcp auth allow conn_abc                     # снять ограничение
 ```
 
 ## Готовый токен
@@ -27,7 +27,7 @@ npx -y @devcrabs/yandex-metrika-mcp auth allow conn_abc                     # с
 Если у вас уже есть OAuth-токен с правом `metrika:read`, сохраните его командой ниже. Ввод скрыт, токен можно передать и через stdin.
 
 ```bash
-npx -y @devcrabs/yandex-metrika-mcp auth import-token --alias "Мой сайт"
+npx -y @dev-crabs/yandex-metrika-mcp auth import-token --alias "Мой сайт"
 ```
 
 Для серверов и контейнеров подойдёт переменная окружения `YANDEX_METRIKA_TOKEN`. Она создаёт подключение `conn_env` и нигде не сохраняется. Ограничить счётчики для него можно переменной `YM_MCP_ALLOWED_COUNTERS=123,456`.

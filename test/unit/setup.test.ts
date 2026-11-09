@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { cutChunk } from "../../src/app/export/artifact-service.ts";
 import { launcher, SetupError, updateCodexConfig, updateJsonConfig } from "../../src/cli/setup.ts";
 
-const entry = { command: "npx", args: ["-y", "@devcrabs/yandex-metrika-mcp"] };
+const entry = { command: "npx", args: ["-y", "@dev-crabs/yandex-metrika-mcp"] };
 
 describe("client setup (UX-04)", () => {
   it("adds the server and keeps every other setting", () => {
@@ -30,7 +30,7 @@ describe("client setup (UX-04)", () => {
     const current = 'model = "x"\n\n[mcp_servers.other]\ncommand = "a"\n';
     const added = updateCodexConfig(current, entry, false);
     expect(added).toContain(
-      '[mcp_servers.yandex-metrika]\ncommand = "npx"\nargs = ["-y", "@devcrabs/yandex-metrika-mcp"]',
+      '[mcp_servers.yandex-metrika]\ncommand = "npx"\nargs = ["-y", "@dev-crabs/yandex-metrika-mcp"]',
     );
     expect(updateCodexConfig(added, entry, false).match(/yandex-metrika\]/g)).toHaveLength(1);
     expect(updateCodexConfig(added, entry, true)).toBe(current);
@@ -39,7 +39,7 @@ describe("client setup (UX-04)", () => {
   it("wraps npx in cmd on Windows", () => {
     expect(launcher("npx", "win32", "", "")).toEqual({
       command: "cmd",
-      args: ["/c", "npx", "-y", "@devcrabs/yandex-metrika-mcp"],
+      args: ["/c", "npx", "-y", "@dev-crabs/yandex-metrika-mcp"],
     });
     expect(launcher("node", "linux", "/opt/cli.js", "/usr/bin/node")).toEqual({
       command: "/usr/bin/node",

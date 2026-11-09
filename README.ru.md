@@ -17,7 +17,7 @@ MCP-сервер для **Яндекс Метрики** только на чте
 Нужен Node.js 22.13 или новее.
 
 ```bash
-npx -y @devcrabs/yandex-metrika-mcp setup --client claude-desktop
+npx -y @dev-crabs/yandex-metrika-mcp setup --client claude-desktop
 ```
 
 Вместо `claude-desktop` можно указать `cursor`, `vscode`, `windsurf`, `codex` или `claude-code`. Перезапустите клиент и попросите: «Подключи Яндекс Метрику и сравни последние две недели по источникам трафика». Ассистент вызовет `metrika_connect` и даст ссылку для входа.

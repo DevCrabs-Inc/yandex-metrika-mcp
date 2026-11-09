@@ -13,7 +13,7 @@
 Команда добавляет сервер в конфиг выбранного клиента. Остальные настройки сохраняются, рядом создаётся резервная копия `*.bak-<время>`.
 
 ```bash
-npx -y @devcrabs/yandex-metrika-mcp setup --client claude-desktop
+npx -y @dev-crabs/yandex-metrika-mcp setup --client claude-desktop
 ```
 
 | `--client`       | Что делает                                                                |
@@ -40,12 +40,12 @@ npx -y @devcrabs/yandex-metrika-mcp setup --client claude-desktop
 ```json
 {
   "mcpServers": {
-    "yandex-metrika": { "command": "npx", "args": ["-y", "@devcrabs/yandex-metrika-mcp"] }
+    "yandex-metrika": { "command": "npx", "args": ["-y", "@dev-crabs/yandex-metrika-mcp"] }
   }
 }
 ```
 
-На Windows клиенты запускают команду без оболочки, поэтому используйте `"command": "cmd", "args": ["/c", "npx", "-y", "@devcrabs/yandex-metrika-mcp"]`.
+На Windows клиенты запускают команду без оболочки, поэтому используйте `"command": "cmd", "args": ["/c", "npx", "-y", "@dev-crabs/yandex-metrika-mcp"]`.
 
 ## Claude Desktop: пакет MCPB
 
@@ -63,8 +63,8 @@ docker run -i --rm -e YANDEX_METRIKA_TOKEN -v ymmcp:/data yandex-metrika-mcp
 ## Проверка
 
 ```bash
-npx -y @devcrabs/yandex-metrika-mcp doctor
-npx -y @devcrabs/yandex-metrika-mcp demo
+npx -y @dev-crabs/yandex-metrika-mcp doctor
+npx -y @dev-crabs/yandex-metrika-mcp demo
 ```
 
 `doctor` показывает версию Node, состояние базы, хранилища токенов и входа. Флаг `--network` дополнительно проверяет доступность серверов Яндекса. `demo` печатает пример сравнения на синтетических данных.

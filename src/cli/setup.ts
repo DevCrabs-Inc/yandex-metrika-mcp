@@ -2,7 +2,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
-export const PACKAGE_NAME = "@devcrabs/yandex-metrika-mcp";
+export const PACKAGE_NAME = "@dev-crabs/yandex-metrika-mcp";
 export const SERVER_KEY = "yandex-metrika";
 
 export const CLIENTS = [

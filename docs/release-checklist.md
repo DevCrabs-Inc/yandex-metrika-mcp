@@ -38,7 +38,7 @@ Status of the release gates from the product spec (G0–G3). An item is done onl
 
 ## Publishing
 
-- [ ] The npm organisation matches the package scope in `package.json` (`@devcrabs/…` needs the org `devcrabs`).
+- [ ] The npm organisation matches the package scope in `package.json` (`@dev-crabs/…` needs the org `dev-crabs`, which exists since 2026-11-09).
 - [ ] First publish: a granular access token with read and write access to the org's packages, saved as the repository secret `NPM_TOKEN`. The release job runs on Node 26 and publishes the packed tarball with `npm publish`.
 - [ ] After the first release: npmjs.com → the package → Settings → Trusted publishing → GitHub Actions, organisation `DevCrabs-Inc`, repository `yandex-metrika-mcp`, workflow `release.yml`. Then delete the `NPM_TOKEN` secret and set Publishing access to "Require two-factor authentication and disallow tokens". Trusted publishing is configured per package, so it needs the package to exist.
 - [ ] Provenance: npm generates it only from public repositories; the release job turns it on automatically once the repository is public. Enable private vulnerability reporting, which SECURITY.md points to.

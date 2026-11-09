@@ -58,7 +58,7 @@ jobs:
       - name: MCP over stdio from the installed package (T33)
         run: pnpm vitest run test/e2e/stdio.test.ts
         env:
-          YM_MCP_E2E_BIN: /tmp/clean/node_modules/@devcrabs/yandex-metrika-mcp/dist/cli.js
+          YM_MCP_E2E_BIN: /tmp/clean/node_modules/@dev-crabs/yandex-metrika-mcp/dist/cli.js
       - run: pnpm mcpb
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:

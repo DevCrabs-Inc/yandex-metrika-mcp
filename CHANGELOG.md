@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The npm package is `@dev-crabs/yandex-metrika-mcp` (scope of the npm organisation `dev-crabs`); install with `npx -y @dev-crabs/yandex-metrika-mcp`.
 - Labels, counter names, goal names and connection aliases lose control and invisible characters (bidi controls, zero-width characters, Unicode tags); results say so with `LABELS_SANITIZED`. Report context no longer bypasses label sanitizing, truncation never splits an emoji, and goal names that look identical after sanitizing are flagged as duplicates.
 - Text summaries put rows, segments, counter and goal lists and artifact text inside an `<untrusted-data-…>` block with a fresh random tag and a warning before and after it. Report, comparison and time-series descriptions say the same.
 - Errors carry `error.details`: the input `field`, up to five `candidates` for mistyped metric, dimension, goal, filter, sort, connection or allowlisted counter IDs (never applied automatically and never taken from other connections), the sanitized Yandex message as `upstream_message`, and any extra facts. The text summary now shows the `request_id`.
