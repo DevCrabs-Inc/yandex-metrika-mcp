@@ -34,24 +34,27 @@ jobs:
         # npm, not pnpm: npm 11 exchanges the GitHub OIDC token itself when a trusted
         # publisher is configured for the package; until then NPM_TOKEN is used.
         # npm supports provenance only from public repositories.
-        run: npm publish package.tgz --access public --tag ${{ contains(github.ref_name, '-') && 'next' || 'latest' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: ${{ github.event.repository.private && 'false' || 'true' }}
-      - name: Make the package installable without a version
-        # Prereleases go to the `next` tag. While no stable version exists, also point
-        # `latest` at the release so `npx -y <package>` from the docs works.
-        if: contains(github.ref_name, '-')
+        # A version already on npm (for example published by hand with 2FA) is skipped,
+        # so the rest of the release can run. While no stable version exists, a
+        # prerelease is also `latest`, so `npx -y <package>` from the docs installs it.
         run: |
           name="$(node -p 'require("./package.json").name')"
           version="$(node -p 'require("./package.json").version')"
-          latest="$(npm view "$name" dist-tags.latest 2>/dev/null || true)"
-          case "$latest" in
-            "" | *-*) npm dist-tag add "$name@$version" latest ;;
-            *) echo "latest is the stable $latest; leaving it" ;;
+          if npm view "$name@$version" version > /dev/null 2>&1; then
+            echo "$name@$version is already on npm; skipping publish"
+            exit 0
+          fi
+          tag=latest
+          case "$version" in
+            *-*)
+              stable="$(npm view "$name" dist-tags.latest 2> /dev/null || true)"
+              case "$stable" in "" | *-*) tag=latest ;; *) tag=next ;; esac
+              ;;
           esac
+          npm publish package.tgz --access public --tag "$tag"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: ${{ github.event.repository.private && 'false' || 'true' }}
       - name: GitHub release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
