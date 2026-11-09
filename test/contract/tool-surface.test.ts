@@ -1,5 +1,6 @@
 import type { Client } from "@modelcontextprotocol/client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { Container } from "../../src/container.ts";
 import { connectClient, tempDir, testContainer } from "../helpers.ts";
 
 // tools/list, prompts and instructions are the contract the model sees. They are
@@ -38,13 +39,15 @@ const DESTRUCTIVE_TOOLS: Readonly<Record<string, string>> = {
 };
 
 let client: Client;
+let container: Container;
 let dir: ReturnType<typeof tempDir>;
 let tools: Tool[];
 let nextCursor: string | undefined;
 
 beforeAll(async () => {
   dir = tempDir();
-  client = await connectClient(await testContainer(dir.path));
+  container = await testContainer(dir.path);
+  client = await connectClient(container);
   const listed = await client.listTools();
   tools = listed.tools;
   nextCursor = listed.nextCursor;
@@ -52,6 +55,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await client.close();
+  await container.close();
   dir.remove();
 });
 

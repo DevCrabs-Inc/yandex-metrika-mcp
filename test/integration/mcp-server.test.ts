@@ -2,6 +2,7 @@ import { Client } from "@modelcontextprotocol/client";
 import { InMemoryTransport } from "@modelcontextprotocol/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { MAX_RESPONSE_BYTES } from "../../src/app/common.ts";
+import type { Container } from "../../src/container.ts";
 import { createMcpServer } from "../../src/mcp/server.ts";
 import { NOW, tempDir, testContainer } from "../helpers.ts";
 
@@ -10,12 +11,13 @@ const BLOG = "10000002";
 const conn = { connection_id: "conn_demo" };
 
 let client: Client;
+let container: Container;
 let dir: ReturnType<typeof tempDir>;
 const logLines: string[] = [];
 
 beforeAll(async () => {
   dir = tempDir();
-  const container = await testContainer(dir.path, {
+  container = await testContainer(dir.path, {
     overrides: { clock: { now: () => NOW } },
     logLines,
   });
@@ -28,6 +30,8 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await client.close();
+  // The SQLite file must be released before the directory can be removed on Windows.
+  await container.close();
   dir.remove();
 });
 

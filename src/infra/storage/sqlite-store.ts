@@ -185,7 +185,14 @@ export class SqliteStore implements ConnectionStore, JobStore {
     const db = new DatabaseSync(file);
     db.exec("PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000; PRAGMA foreign_keys = ON;");
     const store = new SqliteStore(db);
-    store._migrate(existed ? file : null);
+    try {
+      store._migrate(existed ? file : null);
+    } catch (error) {
+      // A refused or failed migration must not keep the file open: on Windows an open
+      // handle blocks deleting or restoring the database.
+      db.close();
+      throw error;
+    }
     return store;
   }
 
