@@ -6,7 +6,7 @@
     "readOnlyHint": false,
     "title": "Cancel job"
   },
-  "description": "Cancels an export job and removes its temporary files. Safe to repeat. Already finished files are not deleted.",
+  "description": "Cancels a Yandex Metrika export job and removes its temporary files. Safe to repeat. Already finished files are not deleted.",
   "inputSchema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "additionalProperties": false,

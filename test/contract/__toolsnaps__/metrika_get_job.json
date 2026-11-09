@@ -6,7 +6,7 @@
     "readOnlyHint": true,
     "title": "Get job"
   },
-  "description": "State, progress, errors and result files of an export job.",
+  "description": "Shows the state, progress, errors and result files of a Yandex Metrika export job.",
   "inputSchema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "additionalProperties": false,

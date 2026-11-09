@@ -6,7 +6,7 @@
     "readOnlyHint": false,
     "title": "Disconnect"
   },
-  "description": "Ends a connection on this computer: cancels its exports, deletes its token and clears its cache. Data already shown in the chat cannot be recalled. Revoking app access inside Yandex is a separate step for the user.",
+  "description": "Disconnects a Yandex Metrika connection on this computer: cancels its exports, deletes its token and clears its cache. Data already shown in the chat cannot be recalled. Revoking app access inside Yandex is a separate step for the user.",
   "inputSchema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "additionalProperties": false,

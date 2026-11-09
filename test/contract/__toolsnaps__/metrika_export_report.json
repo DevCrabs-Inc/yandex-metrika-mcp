@@ -6,7 +6,7 @@
     "readOnlyHint": false,
     "title": "Export report"
   },
-  "description": "Exports all rows of a report to a CSV or JSON file in the background and returns a job. Requires idempotency_key; the same key returns the same job. To continue an interrupted export pass only connection_id and resume_job_id. Poll metrika_get_job until completed, then read with metrika_read_artifact or give the user file_path.",
+  "description": "Exports all rows of a Yandex Metrika report to a CSV or JSON file in the background and returns a job. Requires idempotency_key; the same key returns the same job. To continue an interrupted export pass only connection_id and resume_job_id. Poll metrika_get_job until completed, then read with metrika_read_artifact or give the user file_path.",
   "inputSchema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "additionalProperties": false,

@@ -6,7 +6,7 @@
     "readOnlyHint": true,
     "title": "Describe counter"
   },
-  "description": "Counter settings (time zone, status, access) and its goals with IDs. Call before goal reports. Goal names can repeat, so always refer to goals by ID.",
+  "description": "Shows a Yandex Metrika counter's settings (time zone, status, access) and its goals with IDs. Call before goal reports. Goal names can repeat, so always refer to goals by ID.",
   "inputSchema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "additionalProperties": false,

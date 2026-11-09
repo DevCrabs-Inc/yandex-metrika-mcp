@@ -6,7 +6,7 @@
     "readOnlyHint": false,
     "title": "Connect"
   },
-  "description": "Starts a browser sign-in with Yandex (read-only access). Returns a one-time local login_url for the user to open; no token or code ever passes through the chat. Pass connection_id to renew an expired connection. Afterwards call metrika_status to get the new connection_id.",
+  "description": "Signs in to Yandex Metrika in the browser (read-only access). Returns a one-time local login_url for the user to open; no token or code ever passes through the chat. Pass connection_id to renew an expired connection. Afterwards call metrika_status to get the new connection_id.",
   "inputSchema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "additionalProperties": false,

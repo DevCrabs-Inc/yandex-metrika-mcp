@@ -6,7 +6,7 @@
     "readOnlyHint": true,
     "title": "Read export file"
   },
-  "description": "Reads a finished export file in chunks (up to 32 KiB, cut at line boundaries). Takes an artifact_id, never a path or URL.",
+  "description": "Reads a finished Yandex Metrika export file in chunks (up to 32 KiB, cut at line boundaries). Takes an artifact_id, never a path or URL.",
   "inputSchema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "additionalProperties": false,

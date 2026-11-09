@@ -6,7 +6,7 @@
     "readOnlyHint": true,
     "title": "Catalog"
   },
-  "description": "Lists what reports can use: kind='presets' (ready-made reports), 'metrics' (with unit and aggregation rules, e.g. users must never be summed), 'dimensions' or 'periods'. No API call.",
+  "description": "Lists the Yandex Metrika report fields this server supports: kind='presets' (ready-made reports), 'metrics' (with unit and aggregation rules, e.g. users must never be summed), 'dimensions' or 'periods'. No API call.",
   "inputSchema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "additionalProperties": false,

@@ -6,7 +6,7 @@
     "readOnlyHint": true,
     "title": "Status"
   },
-  "description": "Start here. Shows connections (connection_id values) and their state, export jobs, capabilities and the next step. Works before any Yandex sign-in.",
+  "description": "Shows Yandex Metrika connections (connection_id values) and their state, export jobs, capabilities and the next step. Call it first; works before any Yandex sign-in.",
   "inputSchema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "additionalProperties": false,
