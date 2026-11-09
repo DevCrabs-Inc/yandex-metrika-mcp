@@ -35,24 +35,23 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
 // Static imports and re-exports, including side-effect imports without `from`.
 const IMPORT = /^\s*(?:import|export)\b[^"';]*?(?:from\s+)?["'](\.[^"']+)["']/gm;
 
+/** Imports of one file that leave its layer in a direction it may not take. */
+function forbiddenImports(file: string): string[] {
+  const from = layerOf(file);
+  const allowed = ALLOWED[from];
+  if (allowed === undefined) return [];
+  return [...readFileSync(file, "utf8").matchAll(IMPORT)].flatMap((match) => {
+    const target = resolve(dirname(file), match[1] ?? "");
+    const to = layerOf(target);
+    const sub = relative(SRC, target).split(sep).slice(0, 2).join("/");
+    const ok = to === from || allowed.includes(to) || allowed.includes(sub);
+    return ok ? [] : [`${relative(ROOT, file)} → ${relative(ROOT, target)}`];
+  });
+}
+
 describe("layering", () => {
   it("keeps every import inside the allowed direction", () => {
-    const violations: string[] = [];
-    for (const file of files(SRC, [".ts"])) {
-      const from = layerOf(file);
-      const allowed = ALLOWED[from];
-      if (allowed === undefined) continue;
-      for (const match of readFileSync(file, "utf8").matchAll(IMPORT)) {
-        const target = resolve(dirname(file), match[1] ?? "");
-        const to = layerOf(target);
-        if (to === from) continue;
-        const sub = relative(SRC, target).split(sep).slice(0, 2).join("/");
-        if (!allowed.includes(to) && !allowed.includes(sub)) {
-          violations.push(`${relative(ROOT, file)} → ${relative(ROOT, target)}`);
-        }
-      }
-    }
-    expect(violations).toEqual([]);
+    expect(files(SRC, [".ts"]).flatMap(forbiddenImports)).toEqual([]);
   });
 });
 
