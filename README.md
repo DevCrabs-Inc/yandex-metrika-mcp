@@ -14,17 +14,27 @@ Read-only MCP server for **Yandex Metrika** (Yandex Metrica, Яндекс Мет
 - **Full exports.** Background CSV/JSON export of every row with checksums, a manifest and resume after a restart.
 - **Small, predictable surface.** 13 tools, 3 prompts. Read-only: no write endpoints, no raw HTTP tool.
 
-## Quick start
+## Install
 
-Requires Node.js 22.13 or later.
+Requires Node.js 22.13 or later. No API key and no OAuth app of your own: after installing, ask the assistant to connect Yandex Metrika and sign in through the browser.
+
+**One command** (writes the client config and keeps a backup):
 
 ```bash
-npx -y @dev-crabs/yandex-metrika-mcp setup --client claude-desktop   # or cursor, vscode, windsurf, codex, claude-code
+npx -y @dev-crabs/yandex-metrika-mcp setup --client claude-desktop   # or claude-code, cursor, vscode, windsurf, codex
 ```
 
-Restart the client and ask: _"Connect Yandex Metrika and compare the last two weeks by traffic source."_ The assistant calls `metrika_connect` and gives you a local sign-in link.
+**One click:**
 
-Manual configuration for any client:
+[![Install in Cursor](https://cursor.com/deeplink/mcp-install-dark.svg)](<https://cursor.com/install-mcp?name=yandex-metrika&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBkZXYtY3JhYnMveWFuZGV4LW1ldHJpa2EtbWNwIl19>) [Install in VS Code](<https://vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522yandex-metrika%2522%252C%2522type%2522%253A%2522stdio%2522%252C%2522command%2522%253A%2522npx%2522%252C%2522args%2522%253A%255B%2522-y%2522%252C%2522%2540dev-crabs%252Fyandex-metrika-mcp%2522%255D%257D>)
+
+**Claude Code:**
+
+```bash
+claude mcp add --scope user yandex-metrika -- npx -y @dev-crabs/yandex-metrika-mcp
+```
+
+**Any MCP client** (`mcpServers` format; VS Code uses `servers` with `"type": "stdio"`):
 
 ```json
 {
@@ -34,7 +44,16 @@ Manual configuration for any client:
 }
 ```
 
-Claude Desktop users can also install the `.mcpb` bundle from the GitHub release. Try it without an account: the synthetic `conn_demo` connection is always available.
+On Windows some clients cannot start `npx` directly; use `"command": "cmd", "args": ["/c", "npx", "-y", "@dev-crabs/yandex-metrika-mcp"]`, which is what `setup` writes there. Claude Desktop users can also install the `.mcpb` bundle from the GitHub release. AI agents installing the server should follow [llms-install.md](llms-install.md).
+
+Restart the client and ask: _"Connect Yandex Metrika and compare the last two weeks by traffic source."_ The assistant calls `metrika_connect` and gives you a local sign-in link. Try it without an account: the synthetic `conn_demo` connection is always available.
+
+## Example questions
+
+- "Compare the last two complete weeks by visits and target visits of goal 3001."
+- "Which landing pages brought the most leads for goal X last month?"
+- "Show weekly visits since the start of the quarter."
+- "Export all traffic sources for October to CSV for Excel."
 
 ## Tools
 

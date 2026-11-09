@@ -36,6 +36,7 @@ describe("release metadata", () => {
     const docs = [
       "README.md",
       "README.ru.md",
+      "llms-install.md",
       ...readdirSync(new URL("../../docs/ru/", import.meta.url)).map((f) => `docs/ru/${f}`),
     ];
     for (const path of docs) {

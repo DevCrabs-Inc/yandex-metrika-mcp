@@ -12,15 +12,31 @@ MCP-сервер для **Яндекс Метрики** только на чте
 - **Полная выгрузка.** Фоновый экспорт всех строк в CSV/JSON с контрольными суммами, manifest-файлом и продолжением после перезапуска.
 - **Небольшой понятный набор.** 13 инструментов и 3 готовых сценария. Только чтение: сервер не может менять счётчики, цели и доступы.
 
-## Быстрый старт
+## Установка
 
-Нужен Node.js 22.13 или новее.
+Нужен Node.js 22.13 или новее. API-ключ и своё OAuth-приложение не нужны: после установки попросите ассистента подключить Яндекс Метрику и войдите через браузер.
+
+**Одной командой** (дописывает конфиг клиента и сохраняет резервную копию):
 
 ```bash
 npx -y @dev-crabs/yandex-metrika-mcp setup --client claude-desktop
 ```
 
-Вместо `claude-desktop` можно указать `cursor`, `vscode`, `windsurf`, `codex` или `claude-code`. Перезапустите клиент и попросите: «Подключи Яндекс Метрику и сравни последние две недели по источникам трафика». Ассистент вызовет `metrika_connect` и даст ссылку для входа.
+Вместо `claude-desktop` можно указать `claude-code`, `cursor`, `vscode`, `windsurf` или `codex`.
+
+**В один клик:**
+
+[![Установить в Cursor](https://cursor.com/deeplink/mcp-install-dark.svg)](<https://cursor.com/install-mcp?name=yandex-metrika&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBkZXYtY3JhYnMveWFuZGV4LW1ldHJpa2EtbWNwIl19>) [Установить в VS Code](<https://vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522yandex-metrika%2522%252C%2522type%2522%253A%2522stdio%2522%252C%2522command%2522%253A%2522npx%2522%252C%2522args%2522%253A%255B%2522-y%2522%252C%2522%2540dev-crabs%252Fyandex-metrika-mcp%2522%255D%257D>)
+
+**Claude Code:**
+
+```bash
+claude mcp add --scope user yandex-metrika -- npx -y @dev-crabs/yandex-metrika-mcp
+```
+
+Конфиги для остальных клиентов, Windows и Claude Desktop (`.mcpb`) — в [инструкции по установке](docs/ru/installation.md). AI-агентам, которые ставят сервер сами, — [llms-install.md](llms-install.md).
+
+Перезапустите клиент и попросите: «Подключи Яндекс Метрику и сравни последние две недели по источникам трафика». Ассистент вызовет `metrika_connect` и даст ссылку для входа.
 
 Попробовать без аккаунта: всегда доступно демо-подключение `conn_demo` с синтетическими данными.
 

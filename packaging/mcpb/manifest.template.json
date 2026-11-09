@@ -12,7 +12,22 @@
   "documentation": "https://github.com/DevCrabs-Inc/yandex-metrika-mcp/blob/main/docs/ru/README.md",
   "support": "https://github.com/DevCrabs-Inc/yandex-metrika-mcp/issues",
   "license": "MIT",
-  "keywords": ["yandex", "metrika", "metrica", "analytics", "яндекс метрика"],
+  "keywords": [
+    "mcp",
+    "yandex",
+    "yandex metrika",
+    "yandex metrica",
+    "metrika",
+    "web analytics",
+    "marketing analytics",
+    "seo",
+    "utm",
+    "goals",
+    "reports",
+    "яндекс метрика",
+    "метрика",
+    "веб-аналитика"
+  ],
   "server": {
     "type": "node",
     "entry_point": "dist/cli.js",
