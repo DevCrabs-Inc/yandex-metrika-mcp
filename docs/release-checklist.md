@@ -1,6 +1,6 @@
 # Release checklist
 
-Status of the release gates from the product spec (G0–G3). An item is done only with evidence: a test, a recorded run or a link.
+Status of the release gates G0–G3 defined in [requirements.md](requirements.md#release-gates). An item is done only with evidence: a test, a recorded run or a link.
 
 ## Done in code
 

@@ -1,6 +1,6 @@
 # Agent rules for yandex-metrika-mcp
 
-Read-only Yandex Metrika MCP server in TypeScript. The product spec (in Russian) lives outside this repo in `dev-crabs-Immersive/docs/products/yandex-metrika-mcp/` (files 01–08). Requirement IDs such as D-01 or T06 in code and tests refer to it.
+Read-only Yandex Metrika MCP server in TypeScript. Requirement IDs such as D-01 or T06 in code and tests are defined in [docs/requirements.md](docs/requirements.md).
 
 ## Scope and honesty
 
