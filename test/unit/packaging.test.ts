@@ -18,6 +18,8 @@ describe("release metadata", () => {
 
   it("server.json matches package.json", () => {
     const server = JSON.parse(read("server.json"));
+    // The MCP Registry rejects longer descriptions (HTTP 422 on the 1.0.0 release).
+    expect([...server.description].length).toBeLessThanOrEqual(100);
     expect(server.name).toBe(pkg.mcpName);
     expect(server.version).toBe(pkg.version);
     expect(server.packages[0]).toMatchObject({

@@ -1,0 +1,29 @@
+name: MCP Registry
+
+# Publishes server.json to the official MCP Registry. Called by the release
+# workflow after npm, and runnable by hand to retry from main.
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Publish to the MCP Registry
+        env:
+          # Pinned and verified: never run whatever "latest" happens to be (06).
+          MCP_PUBLISHER_VERSION: v1.8.8
+          MCP_PUBLISHER_SHA256: 09f1fa70ee146b640584274a1a6b2b8a0310b05d4321fa9224e6df6a016d67f4
+        run: |
+          curl -fsSLo mcp-publisher.tar.gz "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz"
+          echo "${MCP_PUBLISHER_SHA256}  mcp-publisher.tar.gz" | sha256sum --check --strict
+          tar xzf mcp-publisher.tar.gz mcp-publisher
+          ./mcp-publisher validate
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish

@@ -68,15 +68,12 @@ jobs:
           files: |
             build/*.mcpb
             build/SHA256SUMS
-      - name: Publish to the MCP Registry
-        env:
-          # Pinned and verified: never run whatever "latest" happens to be (06).
-          MCP_PUBLISHER_VERSION: v1.8.8
-          MCP_PUBLISHER_SHA256: 09f1fa70ee146b640584274a1a6b2b8a0310b05d4321fa9224e6df6a016d67f4
-        run: |
-          curl -fsSLo mcp-publisher.tar.gz "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz"
-          echo "${MCP_PUBLISHER_SHA256}  mcp-publisher.tar.gz" | sha256sum --check --strict
-          tar xzf mcp-publisher.tar.gz mcp-publisher
-          ./mcp-publisher validate
-          ./mcp-publisher login github-oidc
-          ./mcp-publisher publish
+
+  # Separate job: the registry entry can also be published again from main
+  # (Actions > MCP Registry > Run workflow) without moving the release tag.
+  registry:
+    needs: release
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/mcp-registry.yml
