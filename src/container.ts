@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { CatalogService } from "./app/catalog-service.ts";
+import { clientIdentity } from "./app/common.ts";
 import { ComparisonService } from "./app/comparison-service.ts";
 import { ConnectionService } from "./app/connection-service.ts";
 import { CounterService } from "./app/counter-service.ts";
@@ -7,6 +8,7 @@ import { ArtifactService } from "./app/export/artifact-service.ts";
 import { type ExportLimits, ExportService } from "./app/export/export-service.ts";
 import type { ExportFiles } from "./app/export/types.ts";
 import {
+  type ClientIdentity,
   type Clock,
   realSleep,
   type SecretStore,
@@ -51,6 +53,7 @@ export interface Container {
   readonly login: LoginFlow | null;
   readonly browserLogin: BrowserLogin | null;
   readonly secretStoreKind: () => Promise<string>;
+  readonly clientIdentity: ClientIdentity;
   close(): Promise<void>;
 }
 
@@ -94,7 +97,12 @@ export async function createContainer(
   };
 
   const quota = new QuotaScheduler(clock, sleep);
-  const userAgent = `yandex-metrika-mcp/${version}`;
+  const identity = clientIdentity();
+  const userAgent = () => {
+    const client = identity.current();
+    const base = `yandex-metrika-mcp/${version}`;
+    return client === null ? base : `${base} (${client.name}/${client.version})`;
+  };
   const makeSource = (connectionId: string, tokens: TokenProvider) =>
     new YandexSource(
       new YandexClient({
@@ -161,6 +169,7 @@ export async function createContainer(
     config,
     version,
     logger,
+    clientIdentity: identity,
     clock,
     connections,
     reports: new ReportService({ connections, clock, cursorKey }),

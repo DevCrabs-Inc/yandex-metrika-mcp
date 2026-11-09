@@ -34,7 +34,7 @@ function client(handler: Parameters<typeof fakeFetch>[0], provider = tokens()) {
     clock,
     sleep,
     logger: createLogger("error", () => undefined),
-    userAgent: "yandex-metrika-mcp/test",
+    userAgent: () => "yandex-metrika-mcp/test",
   });
   const get = () =>
     c.get({ name: "data" }, new URLSearchParams({ ids: "1" }), {

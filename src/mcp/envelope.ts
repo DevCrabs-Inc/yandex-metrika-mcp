@@ -1,5 +1,6 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
-import { newRequestId } from "../app/common.ts";
+import { jsonBytes, newRequestId } from "../app/common.ts";
+import type { ClientInfo } from "../app/ports.ts";
 import { SCHEMA_VERSION } from "../domain/contract/common.ts";
 import type { ErrorOutput } from "../domain/contract/meta.ts";
 import { DomainError } from "../domain/errors.ts";
@@ -66,24 +67,46 @@ export function wellFormedDeep<T>(value: T): T {
  * Runs a tool body and maps the outcome onto the MCP result envelope: domain
  * failures become `isError` results with a typed code, never protocol errors.
  */
+/**
+ * Size and shape facts for the log line, so the response budget and preview size can
+ * be tuned from real use. Never labels, counter IDs or values (06).
+ */
+function resultFields(output: Record<string, unknown>, text: string): Record<string, unknown> {
+  const data = output["data"] as { rows?: unknown } | undefined;
+  const quality = output["quality"] as
+    | { truncated?: unknown; current?: { truncated?: unknown } }
+    | undefined;
+  const truncated = quality?.truncated ?? quality?.current?.truncated;
+  return {
+    response_bytes: jsonBytes(output) + Buffer.byteLength(text, "utf8"),
+    text_bytes: Buffer.byteLength(text, "utf8"),
+    ...(Array.isArray(data?.rows) ? { rows_returned: data.rows.length } : {}),
+    ...(typeof truncated === "boolean" ? { truncated } : {}),
+  };
+}
+
+const clientFields = (client: ClientInfo | null): Record<string, string> =>
+  client === null ? {} : { client_name: client.name, client_version: client.version };
+
 export async function runTool<T extends Record<string, unknown>>(
   tool: string,
   logger: Logger,
   body: () => Promise<T> | T,
   render: (output: T) => string,
+  client: ClientInfo | null = null,
 ): Promise<CallToolResult> {
   const started = performance.now();
   try {
     const output = wellFormedDeep(await body());
+    const text = render(output).toWellFormed();
     logger.info("tool call", {
       tool,
       status: "ok",
       latency_ms: Math.round(performance.now() - started),
+      ...resultFields(output, text),
+      ...clientFields(client),
     });
-    return {
-      content: [{ type: "text", text: render(output).toWellFormed() }],
-      structuredContent: output,
-    };
+    return { content: [{ type: "text", text }], structuredContent: output };
   } catch (error) {
     const output = toErrorOutput(error);
     const fields = {
@@ -92,6 +115,7 @@ export async function runTool<T extends Record<string, unknown>>(
       error_code: output.error.code,
       request_id: output.request_id,
       latency_ms: Math.round(performance.now() - started),
+      ...clientFields(client),
     };
     if (error instanceof DomainError) {
       logger.info("tool call", fields);

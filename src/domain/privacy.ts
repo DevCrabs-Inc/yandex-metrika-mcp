@@ -62,3 +62,24 @@ export function rowKey(
   const canonical = JSON.stringify(dimensions.map((d) => [d.id, d.name]));
   return `r_${createHash("sha256").update(canonical).digest("hex").slice(0, 16)}`;
 }
+
+const CLIENT_TOKEN = /[^A-Za-z0-9._@+-]+/g;
+const MAX_CLIENT_TOKEN = 64;
+
+const clientToken = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const token = value.replace(CLIENT_TOKEN, "_").slice(0, MAX_CLIENT_TOKEN);
+  return token === "" || token === "_" ? null : token;
+};
+
+/**
+ * The MCP client's self-reported name and version, reduced to characters that are
+ * safe in a log line and a User-Agent comment. Missing or empty values give null.
+ */
+export function safeClientInfo(raw: unknown): { name: string; version: string } | null {
+  if (raw === null || typeof raw !== "object") return null;
+  const info = raw as { name?: unknown; version?: unknown };
+  const name = clientToken(info.name);
+  if (name === null) return null;
+  return { name, version: clientToken(info.version) ?? "unknown" };
+}

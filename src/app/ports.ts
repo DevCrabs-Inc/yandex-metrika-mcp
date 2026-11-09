@@ -81,6 +81,17 @@ export interface MetrikaSource {
   getByTime(request: ByTimeRequest, options?: FetchOptions): Promise<SourceResponse>;
 }
 
+/** Name and version of the connected MCP client: for logs and the User-Agent, never for decisions. */
+export interface ClientInfo {
+  readonly name: string;
+  readonly version: string;
+}
+
+export interface ClientIdentity {
+  current(): ClientInfo | null;
+  observe(info: ClientInfo | null): void;
+}
+
 export interface Clock {
   now(): Date;
 }

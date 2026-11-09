@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { normalizeDimensions } from "../../src/domain/normalize.ts";
-import { MAX_LABEL_LENGTH, safeLabel } from "../../src/domain/privacy.ts";
+import { MAX_LABEL_LENGTH, safeClientInfo, safeLabel } from "../../src/domain/privacy.ts";
 
 // Characters that hide text from a reader or smuggle instructions (T26, D-09).
 const INVISIBLE_SAMPLES = {
@@ -88,5 +88,28 @@ describe("normalizeDimensions with sanitized labels (D-05)", () => {
     expect(hidden.key).not.toBe(plain.key);
     expect(hidden.sanitized).toBe(true);
     expect(plain.sanitized).toBe(false);
+  });
+});
+
+describe("safeClientInfo", () => {
+  it("keeps ordinary client names and versions", () => {
+    expect(safeClientInfo({ name: "claude-code", version: "2.1.0" })).toEqual({
+      name: "claude-code",
+      version: "2.1.0",
+    });
+  });
+
+  it("reduces names to characters safe in a log line and a User-Agent comment", () => {
+    const info = safeClientInfo({ name: "evil) (x\r\nX-Header: 1", version: "1.0 (beta)" });
+    expect(info?.name).toMatch(/^[A-Za-z0-9._@+-]+$/);
+    expect(info?.version).toMatch(/^[A-Za-z0-9._@+-]+$/);
+    expect(safeClientInfo({ name: "a".repeat(500), version: "1" })?.name).toHaveLength(64);
+  });
+
+  it("returns null when the client did not identify itself", () => {
+    expect(safeClientInfo(undefined)).toBeNull();
+    expect(safeClientInfo({ version: "1" })).toBeNull();
+    expect(safeClientInfo({ name: "" })).toBeNull();
+    expect(safeClientInfo({ name: "x" })).toEqual({ name: "x", version: "unknown" });
   });
 });

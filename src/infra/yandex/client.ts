@@ -51,7 +51,8 @@ export interface YandexClientDeps {
   readonly clock: Clock;
   readonly sleep: Sleep;
   readonly logger: Logger;
-  readonly userAgent: string;
+  /** Computed per request: it names the MCP client once that client is known. */
+  readonly userAgent: () => string;
 }
 
 export interface RequestOptions {
@@ -130,7 +131,7 @@ export class YandexClient {
           headers: {
             Authorization: `OAuth ${await this._deps.tokens.accessToken()}`,
             Accept: "application/json",
-            "User-Agent": this._deps.userAgent,
+            "User-Agent": this._deps.userAgent(),
           },
           timeoutMs: Math.min(ATTEMPT_TIMEOUT_MS, remaining),
           maxBytes: MAX_RESPONSE_BYTES,

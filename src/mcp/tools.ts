@@ -1,10 +1,12 @@
 import {
+  CLIENT_INFO_META_KEY,
   type McpServer,
   ResourceNotFoundError,
   ResourceTemplate,
   type ToolAnnotations,
 } from "@modelcontextprotocol/server";
 import { unknownConnection } from "../app/connections.ts";
+import type { ClientInfo } from "../app/ports.ts";
 import type { StatusService } from "../app/status-service.ts";
 import type { Container } from "../container.ts";
 import { SCHEMA_VERSION } from "../domain/contract/common.ts";
@@ -33,6 +35,7 @@ import {
 import { reportInput, reportOutput } from "../domain/contract/report.ts";
 import { timeseriesInput, timeseriesOutput } from "../domain/contract/timeseries.ts";
 import { DomainError } from "../domain/errors.ts";
+import { safeClientInfo } from "../domain/privacy.ts";
 import { runTool } from "./envelope.ts";
 import {
   renderArtifactChunk,
@@ -78,6 +81,18 @@ export function registerTools(
   status: StatusService,
 ): void {
   const { logger } = container;
+  // Client identity is per request on 2026-07-28 (the _meta envelope) and per connection
+  // on 2025-era sessions (initialize); either way it only feeds logs and the User-Agent.
+  const observe = (ctx: unknown): ClientInfo | null => {
+    const envelope = (ctx as { mcpReq?: { envelope?: Record<string, unknown> } } | undefined)
+      ?.mcpReq?.envelope;
+    const info =
+      safeClientInfo(envelope?.[CLIENT_INFO_META_KEY]) ??
+      // Deprecated for 2026-07-28 traffic, still the only source on 2025-era sessions.
+      safeClientInfo(server.server.getClientVersion());
+    container.clientIdentity.observe(info);
+    return info ?? container.clientIdentity.current();
+  };
 
   server.registerTool(
     "metrika_status",
@@ -89,7 +104,8 @@ export function registerTools(
       outputSchema: statusOutput,
       annotations: { ...localRead, title: "Status" },
     },
-    (input) => runTool("metrika_status", logger, () => status.get(input), renderStatus),
+    (input, ctx) =>
+      runTool("metrika_status", logger, () => status.get(input), renderStatus, observe(ctx)),
   );
 
   server.registerTool(
@@ -108,7 +124,7 @@ export function registerTools(
         openWorldHint: true,
       },
     },
-    (input) =>
+    (input, ctx) =>
       runTool(
         "metrika_connect",
         logger,
@@ -145,6 +161,7 @@ export function registerTools(
           };
         },
         renderConnect,
+        observe(ctx),
       ),
   );
 
@@ -164,7 +181,7 @@ export function registerTools(
         openWorldHint: false,
       },
     },
-    (input) =>
+    (input, ctx) =>
       runTool(
         "metrika_disconnect",
         logger,
@@ -195,6 +212,7 @@ export function registerTools(
           };
         },
         renderDisconnect,
+        observe(ctx),
       ),
   );
 
@@ -208,12 +226,13 @@ export function registerTools(
       outputSchema: listCountersOutput,
       annotations: { ...remoteRead, title: "List counters" },
     },
-    (input) =>
+    (input, ctx) =>
       runTool(
         "metrika_list_counters",
         logger,
         () => container.counters.list(input),
         renderCounters,
+        observe(ctx),
       ),
   );
 
@@ -227,12 +246,13 @@ export function registerTools(
       outputSchema: describeCounterOutput,
       annotations: { ...remoteRead, title: "Describe counter" },
     },
-    (input) =>
+    (input, ctx) =>
       runTool(
         "metrika_describe_counter",
         logger,
         () => container.counters.describe(input),
         renderCounter,
+        observe(ctx),
       ),
   );
 
@@ -246,8 +266,14 @@ export function registerTools(
       outputSchema: catalogOutput,
       annotations: { ...localRead, title: "Catalog" },
     },
-    (input) =>
-      runTool("metrika_catalog", logger, () => container.catalog.get(input), renderCatalog),
+    (input, ctx) =>
+      runTool(
+        "metrika_catalog",
+        logger,
+        () => container.catalog.get(input),
+        renderCatalog,
+        observe(ctx),
+      ),
   );
 
   server.registerTool(
@@ -260,8 +286,14 @@ export function registerTools(
       outputSchema: reportOutput,
       annotations: { ...remoteRead, title: "Run report" },
     },
-    (input) =>
-      runTool("metrika_run_report", logger, () => container.reports.run(input), renderReport),
+    (input, ctx) =>
+      runTool(
+        "metrika_run_report",
+        logger,
+        () => container.reports.run(input),
+        renderReport,
+        observe(ctx),
+      ),
   );
 
   server.registerTool(
@@ -274,12 +306,13 @@ export function registerTools(
       outputSchema: comparisonOutput,
       annotations: { ...remoteRead, title: "Compare periods" },
     },
-    (input) =>
+    (input, ctx) =>
       runTool(
         "metrika_compare_periods",
         logger,
         () => container.comparisons.run(input),
         renderComparison,
+        observe(ctx),
       ),
   );
 
@@ -293,12 +326,13 @@ export function registerTools(
       outputSchema: timeseriesOutput,
       annotations: { ...remoteRead, title: "Time series" },
     },
-    (input) =>
+    (input, ctx) =>
       runTool(
         "metrika_run_timeseries",
         logger,
         () => container.timeseries.run(input),
         renderTimeseries,
+        observe(ctx),
       ),
   );
 
@@ -318,8 +352,14 @@ export function registerTools(
         openWorldHint: true,
       },
     },
-    (input) =>
-      runTool("metrika_export_report", logger, () => container.exports.create(input), renderJob),
+    (input, ctx) =>
+      runTool(
+        "metrika_export_report",
+        logger,
+        () => container.exports.create(input),
+        renderJob,
+        observe(ctx),
+      ),
   );
 
   server.registerTool(
@@ -332,12 +372,13 @@ export function registerTools(
       outputSchema: jobOutput,
       annotations: { ...localRead, title: "Get job" },
     },
-    (input) =>
+    (input, ctx) =>
       runTool(
         "metrika_get_job",
         logger,
         () => container.exports.get(input.connection_id, input.job_id),
         renderJob,
+        observe(ctx),
       ),
   );
 
@@ -357,12 +398,13 @@ export function registerTools(
         openWorldHint: false,
       },
     },
-    (input) =>
+    (input, ctx) =>
       runTool(
         "metrika_cancel_job",
         logger,
         () => container.exports.cancel(input.connection_id, input.job_id),
         renderJob,
+        observe(ctx),
       ),
   );
 
@@ -376,12 +418,13 @@ export function registerTools(
       outputSchema: readArtifactOutput,
       annotations: { ...localRead, title: "Read export file" },
     },
-    (input) =>
+    (input, ctx) =>
       runTool(
         "metrika_read_artifact",
         logger,
         () => container.artifacts.read(input),
         renderArtifactChunk,
+        observe(ctx),
       ),
   );
 
