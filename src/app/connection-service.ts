@@ -107,11 +107,22 @@ export class ConnectionService implements ConnectionResolver {
     return [...this._static, ...stored];
   }
 
+  /** Connections the caller may retry with; reading records does not open sources. */
+  private _known(): { id: string; alias: string }[] {
+    const stored = this._deps.store
+      .listConnections()
+      .filter((r) => r.state !== "disconnected")
+      .map((r) => ({ id: r.id, alias: r.alias }));
+    return [...this._static.map((c) => ({ id: c.id, alias: c.alias })), ...stored];
+  }
+
   get(connectionId: string): Connection {
     const fixed = this._static.find((c) => c.id === connectionId);
     if (fixed) return fixed;
     const record = this._deps.store.getConnection(connectionId);
-    if (!record || record.state === "disconnected") throw unknownConnection(connectionId);
+    if (!record || record.state === "disconnected") {
+      throw unknownConnection(connectionId, this._known());
+    }
     if (record.state === "needs_reconnect") {
       throw new DomainError(
         "AUTH_EXPIRED",

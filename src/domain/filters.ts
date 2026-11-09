@@ -1,5 +1,6 @@
-import { findDimension } from "./catalog.ts";
+import { dimensionCandidates, findDimension } from "./catalog.ts";
 import { invalidQuery } from "./errors.ts";
+import { suggest } from "./suggest.ts";
 
 export const FILTER_OPERATORS = ["eq", "neq", "contains", "not_contains", "in", "not_in"] as const;
 export type FilterOperator = (typeof FILTER_OPERATORS)[number];
@@ -21,10 +22,12 @@ export function validateFilters(filters: readonly FilterCondition[]): FilterCond
   if (filters.length > MAX_FILTERS) throw invalidQuery(`At most ${MAX_FILTERS} filters.`);
   const validated = filters.map((filter) => {
     if (findDimension(filter.dimension) === null) {
-      throw invalidQuery(
-        `Unknown filter dimension: ${filter.dimension}.`,
-        "Call metrika_catalog with kind='dimensions' to list supported dimensions.",
-      );
+      throw invalidQuery(`Unknown filter dimension: ${filter.dimension}.`, {
+        field: "filters[].dimension",
+        candidates: suggest(filter.dimension, dimensionCandidates()),
+        nextAction:
+          "Use one of details.candidates if it is what the user meant, or call metrika_catalog with kind='dimensions'.",
+      });
     }
     const multi = filter.op === "in" || filter.op === "not_in";
     if (filter.values.length === 0 || (!multi && filter.values.length !== 1)) {

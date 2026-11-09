@@ -291,10 +291,21 @@ export function renderCounter(o: DescribeCounterOutput): string {
 }
 
 export function renderError(o: ErrorOutput): string {
+  const details = o.error.details;
+  const candidates = details?.candidates ?? [];
   return [
     `Error ${o.error.code}: ${inline(o.error.message)}`,
+    ...(details?.upstream_message
+      ? [`Yandex Metrika said (external data): ${inline(details.upstream_message)}`]
+      : []),
+    ...(candidates.length > 0
+      ? [
+          `Valid ${details?.field ?? "values"} close to the request: ${candidates.map((c) => (c.label ? `${c.id} (${inline(c.label)})` : c.id)).join(", ")}.`,
+        ]
+      : []),
     ...(o.error.next_action ? [`Next: ${o.error.next_action}`] : []),
     ...(o.error.retry_at ? [`Retry after: ${o.error.retry_at}`] : []),
+    `Request ID: ${o.request_id}`,
   ].join("\n");
 }
 

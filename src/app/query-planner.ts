@@ -1,9 +1,11 @@
 import {
   type DimensionDefinition,
+  dimensionCandidates,
   findDimension,
   findMetric,
   isGoalMetricId,
   type MetricDefinition,
+  metricCandidates,
 } from "../domain/catalog.ts";
 import { type IsoDate, isValidTimeZone, todayIn } from "../domain/dates.ts";
 import { DomainError, invalidQuery } from "../domain/errors.ts";
@@ -17,8 +19,9 @@ import type {
 } from "../domain/periods.ts";
 import { expandPreset, MAX_DIMENSIONS, MAX_METRICS, type ReportPreset } from "../domain/presets.ts";
 import type { Accuracy } from "../domain/quality.ts";
+import { suggest } from "../domain/suggest.ts";
 import { safeCounter, safeGoal } from "./common.ts";
-import type { Connection } from "./connections.ts";
+import { type Connection, counterNotAllowed } from "./connections.ts";
 import type { Clock, CounterInfo, GoalInfo } from "./ports.ts";
 
 export interface CounterContext {
@@ -35,11 +38,7 @@ export async function loadCounterContext(
   clock: Clock,
 ): Promise<CounterContext> {
   if (connection.allowedCounters !== null && !connection.allowedCounters.has(counterId)) {
-    throw new DomainError(
-      "COUNTER_NOT_ALLOWED",
-      `Counter ${counterId} is not in the allowlist of connection ${connection.id}.`,
-      { nextAction: "Call metrika_list_counters to see allowed counters." },
-    );
+    throw counterNotAllowed(connection, counterId);
   }
   const counter = safeCounter(await connection.source.getCounter(counterId));
   if (counter.time_zone === null || !isValidTimeZone(counter.time_zone)) {
@@ -144,10 +143,15 @@ interface FieldIds {
 function validateGoalIds(goalIds: readonly string[], goalNames: ReadonlyMap<string, string>): void {
   for (const goalId of goalIds) {
     if (!goalNames.has(goalId)) {
-      throw invalidQuery(
-        `Goal ${goalId} does not exist on this counter.`,
-        "Call metrika_describe_counter to list goal IDs.",
-      );
+      throw invalidQuery(`Goal ${goalId} does not exist on this counter.`, {
+        field: "goal_ids",
+        candidates: suggest(
+          goalId,
+          [...goalNames].map(([id, name]) => ({ id, label: name })),
+        ),
+        nextAction:
+          "Ask the user which goal they mean, or call metrika_describe_counter to list goal IDs.",
+      });
     }
   }
 }
@@ -183,25 +187,32 @@ function selectFieldIds(input: FieldsInputShape, goalIds: readonly string[]): Fi
 function resolveMetric(id: string, goalNames: ReadonlyMap<string, string>): MetricDefinition {
   const metric = findMetric(id, goalNames);
   if (metric !== null) return metric;
+  const candidates = suggest(id, metricCandidates(goalNames));
   if (isGoalMetricId(id)) {
-    throw invalidQuery(
-      `Metric ${id} refers to a goal that does not exist on this counter.`,
-      "Call metrika_describe_counter to list goal IDs.",
-    );
+    throw invalidQuery(`Metric ${id} refers to a goal that does not exist on this counter.`, {
+      field: "metrics",
+      candidates,
+      nextAction:
+        "Ask the user which goal they mean, or call metrika_describe_counter to list goal IDs.",
+    });
   }
-  throw invalidQuery(
-    `Unknown metric: ${id}.`,
-    "Call metrika_catalog with kind='metrics' to list supported metrics.",
-  );
+  throw invalidQuery(`Unknown metric: ${id}.`, {
+    field: "metrics",
+    candidates,
+    nextAction:
+      "Use one of details.candidates if it is what the user meant, or call metrika_catalog with kind='metrics'.",
+  });
 }
 
 function resolveDimension(id: string): DimensionDefinition {
   const dimension = findDimension(id);
   if (dimension !== null) return dimension;
-  throw invalidQuery(
-    `Unknown dimension: ${id}.`,
-    "Call metrika_catalog with kind='dimensions' to list supported dimensions.",
-  );
+  throw invalidQuery(`Unknown dimension: ${id}.`, {
+    field: "dimensions",
+    candidates: suggest(id, dimensionCandidates()),
+    nextAction:
+      "Use one of details.candidates if it is what the user meant, or call metrika_catalog with kind='dimensions'.",
+  });
 }
 
 export function planFields(
@@ -248,6 +259,14 @@ export function planSort(
     if (!allowed.has(field)) {
       throw invalidQuery(
         `Cannot sort by ${field}: it is not among the selected metrics or dimensions.`,
+        {
+          field: "sort",
+          candidates: suggest(field, [
+            ...fields.metrics.map((m) => ({ id: m.id, label: m.label })),
+            ...fields.dimensions.map((d) => ({ id: d.id, label: d.label })),
+          ]),
+          nextAction: "Sort by a selected field; prefix it with '-' for descending order.",
+        },
       );
     }
   }

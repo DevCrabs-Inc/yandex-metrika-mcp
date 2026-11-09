@@ -6,8 +6,23 @@ import { DomainError } from "../domain/errors.ts";
 import type { Logger } from "../infra/log/logger.ts";
 import { renderError } from "./render.ts";
 
+function errorDetails(error: DomainError): ErrorOutput["error"]["details"] {
+  const details = {
+    ...error.details,
+    ...(error.field === null ? {} : { field: error.field }),
+    ...(error.candidates.length === 0 ? {} : { candidates: [...error.candidates] }),
+    ...(error.upstreamMessage === null ? {} : { upstream_message: error.upstreamMessage }),
+  };
+  // zod infers the catchall as an index signature that also covers `candidates`,
+  // which no value can satisfy; the runtime shape matches errorOutput.
+  return Object.keys(details).length === 0
+    ? undefined
+    : (details as ErrorOutput["error"]["details"]);
+}
+
 export function toErrorOutput(error: unknown): ErrorOutput {
   const known = error instanceof DomainError;
+  const details = known ? errorDetails(error) : undefined;
   return {
     schema_version: SCHEMA_VERSION,
     kind: "error",
@@ -20,6 +35,7 @@ export function toErrorOutput(error: unknown): ErrorOutput {
           retryable: error.retryable,
           retry_at: error.retryAt,
           next_action: error.nextAction,
+          ...(details === undefined ? {} : { details }),
         }
       : {
           code: "INTERNAL_ERROR",

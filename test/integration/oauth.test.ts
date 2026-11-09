@@ -1,5 +1,7 @@
-import { request } from "node:http";
+import { createServer, request } from "node:http";
+import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
+import { DomainError } from "../../src/domain/errors.ts";
 import { MemorySecretStore } from "../../src/infra/secrets/stores.ts";
 import { fakeFetch, json, tempDir, testContainer, yandexApi } from "../helpers.ts";
 
@@ -161,6 +163,31 @@ describe("browser sign-in (UX-02, T17)", () => {
     const page = await http(`${base}/connect/${handle}`);
     expect(page.body).toMatch(/invalid, expired or was already used/);
     expect(c.connections.records()).toHaveLength(0);
+  });
+});
+
+describe("busy sign-in ports", () => {
+  it("returns a typed error with a next action instead of an internal error", async () => {
+    const blocker = createServer();
+    await new Promise<void>((resolve) => blocker.listen(0, "127.0.0.1", resolve));
+    const port = (blocker.address() as AddressInfo).port;
+    const dir = tempDir();
+    const c = await testContainer(dir.path, {
+      config: { clientId: CLIENT_ID, redirectPorts: [port] },
+      overrides: { fetch: fakeFetch(yandexApi()), secrets: new MemorySecretStore() },
+    });
+    cleanup.push(async () => {
+      await c.close();
+      blocker.close();
+      dir.remove();
+    });
+    const error = await c.login?.start(null, null).then(
+      () => null,
+      (e: unknown) => e as DomainError,
+    );
+    expect(error).toBeInstanceOf(DomainError);
+    expect(error?.code).toBe("AUTH_NOT_CONFIGURED");
+    expect(error?.nextAction).toMatch(/YM_MCP_OAUTH_PORTS/);
   });
 });
 

@@ -171,11 +171,10 @@ export class YandexClient {
           );
         }
         if (status === 400) {
-          throw new DomainError(
-            "INVALID_QUERY",
-            `Yandex Metrika rejected the request${detail.message ? `: ${detail.message}` : "."}`,
-            { nextAction: "Check metrics, dimensions and filters with metrika_catalog." },
-          );
+          throw new DomainError("INVALID_QUERY", "Yandex Metrika rejected the request.", {
+            nextAction: "Check metrics, dimensions and filters with metrika_catalog.",
+            ...(detail.message ? { upstreamMessage: detail.message } : {}),
+          });
         }
         if (status === 429) {
           const now = clock.now();

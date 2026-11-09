@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import type { Clock } from "../../app/ports.ts";
+import { DomainError } from "../../domain/errors.ts";
 import type { Logger } from "../log/logger.ts";
 import { authorizeUrl, createPkce, OAuthError, oauthMessage, randomToken } from "./oauth.ts";
 import { connectPage, donePage, errorPage, selectPage } from "./pages.ts";
@@ -168,7 +169,14 @@ export class LoopbackAuthServer {
         return;
       }
     }
-    throw new Error(`All sign-in ports are busy (${this._options.ports.join(", ")}).`);
+    throw new DomainError(
+      "AUTH_NOT_CONFIGURED",
+      `Browser sign-in cannot start: local ports ${this._options.ports.join(", ")} are all in use.`,
+      {
+        nextAction:
+          "Close the program that uses these ports and try again, set YM_MCP_OAUTH_PORTS to ports registered as redirect URIs of the OAuth app, or run `yandex-metrika-mcp auth import-token`.",
+      },
+    );
   }
 
   private _send(

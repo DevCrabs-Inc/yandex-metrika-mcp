@@ -111,9 +111,12 @@ describe("connections (ACC-01)", () => {
     const { c } = await setup();
     const { connectionId } = await importToken(c);
     c.connections.setAllowlist(connectionId, ["999"]);
-    expect(
-      (await errorOf(c.reports.run({ connection_id: connectionId, counter_id: COUNTER_ID })))?.code,
-    ).toBe("COUNTER_NOT_ALLOWED");
+    const error = await errorOf(
+      c.reports.run({ connection_id: connectionId, counter_id: COUNTER_ID }),
+    );
+    expect(error?.code).toBe("COUNTER_NOT_ALLOWED");
+    // Candidates come from this connection's allowlist only.
+    expect(error?.candidates).toEqual([{ id: "999", label: null }]);
     expect((await c.counters.list({ connection_id: connectionId })).counters).toHaveLength(0);
   });
 

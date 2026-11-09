@@ -1,3 +1,5 @@
+import type { Candidate } from "./suggest.ts";
+
 /**
  * Curated catalog of Reporting API fields this server understands. Field IDs
  * follow the official Yandex Metrika API; semantics drive how totals and
@@ -148,6 +150,21 @@ export function goalMetricId(goalId: string, kind: GoalMetricKind): string {
 }
 
 const METRIC_INDEX = new Map(METRICS.map((m) => [m.id, m]));
+
+/** Every metric ID valid for a counter with these goals, for "did you mean" hints. */
+export function metricCandidates(goalNames: ReadonlyMap<string, string>): Candidate[] {
+  const kinds = Object.keys(GOAL_METRIC_SHAPES) as GoalMetricKind[];
+  const goalMetrics = [...goalNames.keys()].flatMap((goalId) =>
+    kinds.map((kind) => goalMetricId(goalId, kind)),
+  );
+  return [
+    ...METRICS.map((m) => ({ id: m.id, label: m.label })),
+    ...goalMetrics.map((id) => ({ id, label: findMetric(id, goalNames)?.label ?? null })),
+  ];
+}
+
+export const dimensionCandidates = (): Candidate[] =>
+  DIMENSIONS.map((d) => ({ id: d.id, label: d.label }));
 const DIMENSION_INDEX = new Map(DIMENSIONS.map((d) => [d.id, d]));
 
 /**

@@ -31,12 +31,20 @@ const RETRYABLE: ReadonlySet<ErrorCode> = new Set([
   "UPSTREAM_TIMEOUT",
 ]);
 
+import type { Candidate } from "./suggest.ts";
+
 export type ErrorDetailValue = string | number | boolean | null;
 
 export interface DomainErrorOptions {
   readonly nextAction?: string;
   readonly retryAt?: string;
   readonly details?: Readonly<Record<string, ErrorDetailValue>>;
+  /** Input field the error is about, e.g. `metrics` or `filters[].dimension`. */
+  readonly field?: string;
+  /** Valid values from the catalog or from resources of the same connection only. */
+  readonly candidates?: readonly Candidate[];
+  /** Sanitized text from the Yandex API, kept apart from our own message. */
+  readonly upstreamMessage?: string;
   readonly cause?: unknown;
 }
 
@@ -51,6 +59,9 @@ export class DomainError extends Error {
   readonly retryAt: string | null;
   readonly nextAction: string | null;
   readonly details: Readonly<Record<string, ErrorDetailValue>>;
+  readonly field: string | null;
+  readonly candidates: readonly Candidate[];
+  readonly upstreamMessage: string | null;
 
   constructor(code: ErrorCode, message: string, options: DomainErrorOptions = {}) {
     super(message, options.cause === undefined ? undefined : { cause: options.cause });
@@ -59,8 +70,18 @@ export class DomainError extends Error {
     this.retryAt = options.retryAt ?? null;
     this.nextAction = options.nextAction ?? null;
     this.details = options.details ?? {};
+    this.field = options.field ?? null;
+    this.candidates = options.candidates ?? [];
+    this.upstreamMessage = options.upstreamMessage ?? null;
   }
 }
 
-export const invalidQuery = (message: string, nextAction?: string): DomainError =>
-  new DomainError("INVALID_QUERY", message, nextAction === undefined ? {} : { nextAction });
+export const invalidQuery = (
+  message: string,
+  options?: string | Omit<DomainErrorOptions, "cause">,
+): DomainError =>
+  new DomainError(
+    "INVALID_QUERY",
+    message,
+    typeof options === "string" ? { nextAction: options } : (options ?? {}),
+  );

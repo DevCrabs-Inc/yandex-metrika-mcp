@@ -216,6 +216,75 @@ describe("reports", () => {
     });
     expect(future.structured.error?.code).toBe("INVALID_QUERY");
     expect(future.text).toMatch(/^Error INVALID_QUERY/);
+    expect(future.text).toMatch(/^Request ID: req_[0-9a-f]{20}$/m);
+  });
+
+  it("suggests close valid values for mistyped IDs and never applies them", async () => {
+    type Details = { field?: string; candidates?: { id: string; label: string | null }[] };
+    const detailsOf = (s: Structured) => (s.error as { details?: Details } | undefined)?.details;
+    const ids = (s: Structured) => detailsOf(s)?.candidates?.map((c) => c.id) ?? [];
+
+    const metric = await call("metrika_run_report", {
+      ...conn,
+      counter_id: SHOP,
+      metrics: ["ym:s:visit"],
+    });
+    expect(metric.isError).toBe(true);
+    expect(detailsOf(metric.structured)?.field).toBe("metrics");
+    expect(ids(metric.structured)).toContain("ym:s:visits");
+    expect(metric.text).toContain("Valid metrics close to the request: ym:s:visits (Visits)");
+
+    const dimension = await call("metrika_run_report", {
+      ...conn,
+      counter_id: SHOP,
+      metrics: ["ym:s:visits"],
+      dimensions: ["ym:s:UTMSource"],
+    });
+    expect(ids(dimension.structured)).toContain("ym:s:lastSignUTMSource");
+
+    const filter = await call("metrika_run_report", {
+      ...conn,
+      counter_id: SHOP,
+      filters: [{ dimension: "ym:s:lastSignUTMMedum", op: "eq", values: ["cpc"] }],
+    });
+    expect(detailsOf(filter.structured)?.field).toBe("filters[].dimension");
+    expect(ids(filter.structured)).toContain("ym:s:lastSignUTMMedium");
+
+    const sort = await call("metrika_run_report", {
+      ...conn,
+      counter_id: SHOP,
+      metrics: ["ym:s:visits"],
+      dimensions: ["ym:s:lastSignUTMSource"],
+      sort: ["-ym:s:visit"],
+    });
+    expect(ids(sort.structured)).toEqual(["ym:s:visits"]);
+
+    const connection = await call("metrika_list_counters", { connection_id: "conn_dmo" });
+    expect(ids(connection.structured)).toEqual(["conn_demo"]);
+  });
+
+  it("suggests goals of the same counter only", async () => {
+    const counter = await call("metrika_describe_counter", { ...conn, counter_id: SHOP });
+    const goalIds = (counter.structured["goals"] as { id: string }[]).map((g) => g.id);
+    const first = goalIds[0] ?? "";
+    const missing = `${first}9`;
+    const r = await call("metrika_run_report", {
+      ...conn,
+      counter_id: SHOP,
+      preset: "goals",
+      goal_ids: [missing],
+    });
+    const candidates =
+      (r.structured.error as { details?: { candidates?: { id: string }[] } } | undefined)?.details
+        ?.candidates ?? [];
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const c of candidates) expect(goalIds).toContain(c.id);
+  });
+
+  it("gives no candidates when access is denied (T21)", async () => {
+    const r = await call("metrika_run_report", { ...conn, counter_id: "42" });
+    expect(r.structured.error?.code).toBe("ACCESS_DENIED");
+    expect((r.structured.error as { details?: unknown }).details).toBeUndefined();
   });
 
   it("rejects invalid arguments at the schema boundary", async () => {

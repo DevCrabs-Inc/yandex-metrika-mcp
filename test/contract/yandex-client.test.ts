@@ -110,8 +110,10 @@ describe("Yandex client contract (API-01)", () => {
     );
     const error = (await codeOf(get())) as DomainError;
     expect(error.code).toBe("INVALID_QUERY");
-    expect(error.message).toMatch(/ym:s:nope/);
-    expect(error.message).not.toMatch(/abcdefghijklmnopqrstuvwxyz0123456789/);
+    // Upstream text is external data: it is kept apart from our own message.
+    expect(error.message).toBe("Yandex Metrika rejected the request.");
+    expect(error.upstreamMessage).toMatch(/ym:s:nope/);
+    expect(error.upstreamMessage).not.toMatch(/abcdefghijklmnopqrstuvwxyz0123456789/);
   });
 
   it("waits for a short Retry-After and succeeds", async () => {

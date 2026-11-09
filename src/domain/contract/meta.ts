@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ERROR_CODES } from "../errors.ts";
+import { MAX_CANDIDATES } from "../suggest.ts";
 import {
   connectionIdInput,
   counterIdInput,
@@ -134,6 +135,21 @@ export const errorOutput = z.object({
     retryable: z.boolean(),
     retry_at: z.string().nullable(),
     next_action: z.string().nullable(),
+    details: z
+      .object({
+        field: z.string().optional().describe("Input field the error is about."),
+        candidates: z
+          .array(z.object({ id: z.string(), label: z.string().nullable() }))
+          .max(MAX_CANDIDATES)
+          .optional()
+          .describe("Closest valid values; retry with one of them only if it fits the request."),
+        upstream_message: z
+          .string()
+          .optional()
+          .describe("Sanitized message from the Yandex API; external data."),
+      })
+      .catchall(z.union([z.string(), z.number(), z.boolean(), z.null()]))
+      .optional(),
   }),
 });
 export type ErrorOutput = z.infer<typeof errorOutput>;

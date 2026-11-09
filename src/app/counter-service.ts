@@ -2,11 +2,10 @@ import { SCHEMA_VERSION } from "../domain/contract/common.ts";
 import type { DescribeCounterOutput, ListCountersOutput } from "../domain/contract/meta.ts";
 import { decodeCursor, encodeCursor } from "../domain/cursor.ts";
 import { isValidTimeZone } from "../domain/dates.ts";
-import { DomainError } from "../domain/errors.ts";
 import { fingerprint } from "../domain/fingerprint.ts";
 import type { Warning } from "../domain/warnings.ts";
 import { demoWarning, provenance, safeCounter, safeGoal } from "./common.ts";
-import type { ConnectionResolver } from "./connections.ts";
+import { type ConnectionResolver, counterNotAllowed } from "./connections.ts";
 import type { Clock } from "./ports.ts";
 
 export const COUNTERS_PAGE_SIZE = 50;
@@ -87,11 +86,7 @@ export class CounterService {
     const { connections, clock } = this._deps;
     const connection = connections.get(input.connection_id);
     if (connection.allowedCounters !== null && !connection.allowedCounters.has(input.counter_id)) {
-      throw new DomainError(
-        "COUNTER_NOT_ALLOWED",
-        `Counter ${input.counter_id} is not in the allowlist of connection ${connection.id}.`,
-        { nextAction: "Call metrika_list_counters to see allowed counters." },
-      );
+      throw counterNotAllowed(connection, input.counter_id);
     }
     const counter = safeCounter(await connection.source.getCounter(input.counter_id));
     // Duplicates are counted after sanitizing: names that differ only by invisible
