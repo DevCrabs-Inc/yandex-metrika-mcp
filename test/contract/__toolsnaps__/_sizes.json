@@ -10,9 +10,9 @@
     "metrika_get_job": 5400,
     "metrika_list_counters": 2700,
     "metrika_read_artifact": 2300,
-    "metrika_run_report": 9000,
-    "metrika_run_timeseries": 9500,
+    "metrika_run_report": 9100,
+    "metrika_run_timeseries": 9600,
     "metrika_status": 2600
   },
-  "total": 64500
+  "total": 64700
 }
