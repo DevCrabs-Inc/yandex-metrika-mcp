@@ -8,6 +8,12 @@ Read-only MCP server for **Yandex Metrika** (Yandex Metrica, Яндекс Мет
 
 > Status: **1.0.0**, the first stable release; tool names, arguments and outputs follow semantic versioning. Covered by tests against synthetic data and a simulated API, and checked with a live Yandex sign-in and reports on macOS. Other clients and platforms are tracked in [docs/release-checklist.md](docs/release-checklist.md).
 
+## Website and guides
+
+- [Dev Crabs product overview (RU)](https://dev-crabs.ru/products/yandex-metrika-mcp) — see the demo report and business questions the server can answer.
+- [SEO quickstart (RU)](https://dev-crabs.ru/products/yandex-metrika-mcp/seo) — connect your counter, compare organic landing pages and export a report.
+- [Client installation](docs/ru/installation.md) · [Yandex sign-in](docs/ru/connection.md) · [Report accuracy](docs/ru/data-quality.md) · [Full exports](docs/ru/exports.md) (RU).
+
 ## Why this server
 
 - **Sign in through the browser.** No token pasting, no OAuth app of your own; the token never enters the chat.
